@@ -16,4 +16,4 @@ codes
 
 class-subclass-subsubclass.type : 文件名全小写，用`-`连接
 
-[1] http://www.berlinix.com
+[1]:http://www.berlinix.com
