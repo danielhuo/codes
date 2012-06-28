@@ -1,5 +1,5 @@
 /*
- * bailing, 2009/07/13
+ * berlinix, 2009/07/13
  *
  * test non-atomic access
  * codes from http://www.delorie.com/gnu/docs/glibc/libc_495.html

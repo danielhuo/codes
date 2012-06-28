@@ -1,5 +1,5 @@
 /*
- * bailing, 2010/01/20
+ * berlinix, 2010/01/20
  * study prctl(): set thread name
  *
  * to check the thread name

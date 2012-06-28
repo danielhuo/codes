@@ -1,5 +1,5 @@
 /*
- * bailing, 2010/01/07
+ * berlinix, 2010/01/07
  *
  * pthread_create wrapper,
  * for gprof - multithread
