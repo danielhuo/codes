@@ -1,7 +1,7 @@
 codes
 =====
 
-编程学习代码
+编程学习代码。参考[波黎克斯][1]
 
 目录结构
 -------
@@ -16,3 +16,4 @@ codes
 
 class-subclass-subsubclass.type : 文件名全小写，用`-`连接
 
+[1] http://www.berlinix.com
