@@ -9,7 +9,9 @@ codes
 - learn-xxx
  - learn-LANG : 编程语言学习代码
  - learn-algo : 数据结构、算法学习代码
+ - learn-tex : 曾经用LaTeX写笔记，后来转用VimWiki，这陈旧的笔记已无甚价值。如果想了解下LaTeX的基础语法，可以参考。
 - text : 包含纯文本的目录，用于测试字符串算法等
+- copy : 收集的一些优秀代码
 
 文件命名
 -------
