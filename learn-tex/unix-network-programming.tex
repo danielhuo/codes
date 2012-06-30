@@ -1,0 +1,150 @@
+\part{UNIX Network Programming}
+
+UNIX网络编程知识的主要来源是W. Richard Stevens的\emph{UNIX Networkiing Programming}。
+主要是API的使用，网络编程的常用模式，各种协议的网络应用等。
+
+这部分关注的一个领域是高性能服务器的设计、开发。包括各种I/O模型的学习，如nonblocking socket
+相关的select, poll, kqueue, epoll, complete port等。包括一些优化技术技巧，如cache，thread
+等的使用。
+
+\chapter{TCP and Socket API}
+\subsection{SYN}
+Windows系统中，只允最大存在10个TCP半开连接(half-open tcp connections)。
+因为由此限制，在开启P2P软件时，通常P2P软件会占满此半开连接的限制，
+所以用户打开web页面等网络应用时会很慢。不过如果将限制打开(很多P2P软件都由此功能)，
+会消耗更多系统资源，也有说导致路由器梗死，防火墙瘫痪等。因此有建议半开连接数不要超过50个。
+\blcomment{打开限制，使P2P软件快速拉起流量？}
+修改\blscmd{C:/WINDOWS/system32/drivers/tcpip.sys}可以改变这个限制。
+\href{http://half-open.com/}{half-open.com}提供了工具查看和修改这个值。
+
+\href{http://en.wikipedia.org/wiki/SYN_flood}{SYN flood}是一种DoS攻击方式。
+正常TCP连接建立经过三个阶段，client-(SYN)-server, server-(SYN/ACK)-client,
+client-(ACK)-server，由此TCP连接完成。但恶意客户端可以通过两种方式对server施以SYN攻击。
+其一是client不响应ACK包，其二是client填入一个虚假的IP地址，
+因此server发送SYN/ACK后等待一个不存在的IP响应ACK。
+
+\subsection{RST}
+有三种情况产生RST报文。
+\begin{enumerate}
+\item connect到一个没有进程监听的端口。
+\item 异常终止一个连接。这样做的好处在于，丢弃任何待发送数据，并立即发生复位报文；
+RST的接收方可以区分另一方是异常关闭连接。Sockect API通过设置``linger on close"选项(SOL\_LINGER)
+提供这种异常关闭的能力，这将导致close时发生RST报文。
+\item 检查半打开连接。
+\end{enumerate}
+
+\section{Socket Options}
+\subsection{SO\_KEEPALIVE}
+在TCP层实现侦测无活动连接，TCP自动发送keep-alive probe给对端，对端可能出现三种响应。
+其一是接收到ACK，表明对端还存在，其二是接收到RST，表示对端crashed或reboot，此时有ECONNRESET错误，
+其三是对端未有任何响应，此时有更多的侦测包发送(see UNP3/e, p200)，如果最后仍无响应，则有ETIMEDOUT错误。
+但是如果某个keep-alive probe的响应是ICMP错误，则表明host unreachable，将有EHOSTUNREACH错误。
+
+对于侦测时间，通常是2小时。这个时间是pre-kernel相关，而非pre-socket相关的，因此修改此值，
+将影响所有的socket。这个选项的目的是，发现对端crashed或unreachable(掉线，断电等)。
+
+此选项多用在服务器程序中，如应对half-open connection，keep-alive选项将发现half-open连接并中断它们。
+
+\section{Nonblocking I/O}
+与非阻塞IO相关的网络API包括：select, poll等传统I/O轮询函数，以及如
+epoll(Linux), kqueue(FreeBSD), /dev/poll(Solaris), IOCP(Windows)等新的更为高效的函数。
+\href{http://monkey.org/~provos/libevent/}{libevent}这个跨平台的事件处理库就在这些平台使用了对应的轮询函数。
+
+\subsection{Nonblocking Socket}
+\begin{enumerate}
+\item Input操作，对应recv系列函数，如果是非阻塞sockect，而读取不到数据，则返回EWOULDBLOCK。
+\item Output操作，对应send系列函数，如果是非阻塞，且发送缓冲已满，则返回EWOULDBLOCK。
+\item accept操作，如果是非阻塞且没有新连接，返回EWOULDBLOCK。
+\item connect操作，如果connect不能立即完成，则返回EINPROGRESS。
+\end{enumerate}
+
+有时select告诉我们文件描述符已可读，但recv()返回-1，errno为EWOULDBLOCK，此为正常情况，忽略。
+在Linux下查看man select，其中BUGS中就提到这个问题，并举例说，当有数据到达时，select通知可读，
+但此时若数据的checksum失败，则数据被抛弃，read()就将失败。而EAGAIN, EWOULDBLOCK的说明是：
+the socket is marked non-blocking and the requested operation would block.
+SystemV使用EAGAIN，而Berkeley使用EWOULDBLOCK，但现在大多系统都将两者设为等值。
+
+注意，以上recv()返回-1，errno为EWOULDBLOCK。如果slect()返回可读，但recv()返回0，则说明对端关闭了socket，
+此时本地socket也应该被close。
+
+如果select()返回-1，则说明有TCP连接坏了(可能之前就接受到了SIGPIPE)，要具体判断是那个连接坏了，可用以下方法。
+1、对每个文件描述符调用select()，返回-1则说明此条连接已坏。
+2、对每个文件描述符调用getsockopt()，取SOL\_ERROR选项的值，如果其值大于0，则说明此条连接已坏。
+
+关于非阻塞socket的connect()，应当是比较复杂的。如果connect()返回-1且errno为EINPROGRESS，
+则需要调用select()判断sockfd。且在select()返回文件可读或可写后，应用getsockopt()判断是否有错误发生。
+UNP上说，非阻塞socket的connect()操作的移植性非常低。因为不同系统上的判定方法不尽相同。
+以下是摘自UNP 3/e上的代码片段：
+
+\subsection{select}
+\begin{lstlisting}[language=C++]
+#include <sys/select.h>
+#include <sys/time.h>
+
+int select(int maxfd, fd_set* readset, fd_set* writeset, 
+           fd_set* exceptset, const struct timeval* timeout);
+
+struct timeval{
+    long tv_sec;    // seconds
+    long tv_usec;   // microseconds
+};
+
+void FD_ZERO(fd_set* fdset);
+void FD_SET(int fd, fd_set* fdset);
+void FD_CLR(int fd, fd_set* fdset);
+int  FD_ISSET(int fd, fd_set* fdset);
+\end{lstlisting}
+
+\blscmd{FD\_SETSIZE}定义于\cppheader{sys/types.h}。
+在Linux上，此值一般为1024，如果修改此值，需要重新编译内核。
+在Windows系统上，这个宏的值默认为64，可以直接修改。
+
+select() return -1，表明有socket坏掉了。
+select() 的最后一个参数，如果传入NULL，表明永久等待，直到有事件发生；如果传入0，表明立即返回；如果传入具体时间，
+则是等待超时。
+
+\subsection{epoll}
+\begin{lstlisting}[language=C++]
+#include <sys/epoll.h>
+
+int epoll_create(int size);
+int epoll_ctl(int epfd, int op, int fd,
+              struct epoll_event* event);
+int epoll_wait(int epfd, struct epoll_event* events,
+               int maxevents, int timeout);
+
+EPOLL_CTL_ADD   // op: add
+EPOLL_CTL_MOD   // op: modify listen event
+EPOLL_DEL       // op: delete
+
+typedef union epoll_data{
+    void*       ptr;
+    int         fd;
+    __unit32_t  u32;
+    __uint64_t  u64;
+}epoll_data_t;
+
+struct epoll_event{
+    __unit32_t      events;
+    epoll_data_t    data;
+};
+\end{lstlisting}
+
+以下是来自CU的讨论：
+\blcopy{
+LT(level triggered)是缺省的工作方式，并且同时支持block和no-block socket.在这种做法中，
+内核告诉你一个文件描述符是否就绪了，然后你可以对这个就绪的fd进行IO操作。
+如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点。
+传统的select/poll都是这种模型的代表。}
+
+\blcopy{ET(edge-triggered)是高速工作方式，只支持no-block socket。在这种模式下，
+当描述符从未就绪变为就绪时，内核通过epoll告诉你。
+然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，
+直到你做了某些操作导致那个文件描述符不再为就绪状态了(比如，你在发送，接收或者接收请求，
+或者发送接收的数据少于一定量时导致了一个EWOULDBLOCK 错误）。
+但是请注意，如果一直不对这个fd作IO操作(从而导致它再次变成未就绪)，内核不会发送更多的通知(only once),
+不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认。}
+
+\blcopy{在许多测试中我们会看到如果没有大量的idle-connection或者dead-connection，
+epoll的效率并不会比 select/poll高很多，但是当我们遇到大量的idle-connection(例如WAN环境中存在大量的慢速连接)，
+就会发现epoll的效率大大高于select/poll。}

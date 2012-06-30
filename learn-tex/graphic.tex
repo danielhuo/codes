@@ -1,0 +1,55 @@
+\part{Graphic Tools}
+\index{Graphic Tools}
+
+\chapter{Metapost}
+\noindent\href{http://ect.bell-labs.com/who/hobby/index.shtml}{John D.Hobby} Metapost作者的主页。\\
+\noindent\href{http://docs.huihoo.com/homepage/shredderyin/metapost.html}{王垠写的Metapost介绍。} 其中有大量的Metapost实例。\\
+
+Metapost是一种用于绘图的语言，源自Knuth的Metafont语言。
+在CTEX提供的软件包中附带有Metapost工具：mp/mpost。较新的系统都使用mpost命令。
+Metapost文件通常以.mp为后缀，编译命令为\fbox{mpost fname.mp}
+生成的图形文件为\fbox{fname.1}或以某个数字为后缀。这种图形文件就是eps文件。
+用CTEX软件包中的GSview就可以查看esp, ps图形文件，也可以用GSview将它们转换为其他许多格式的图像文件，如jpeg等。
+
+一个简单的Metapost源文件是：
+\begin{lstlisting}
+beginfig(1)
+draw (20,20)--(0,0);
+endfig;
+\end{lstlisting}
+就画了一条直线。Metapost的源文件，每行以``;''结尾；注释与\LaTeX注释相同，使用\%作注释。
+
+\section{Grapviz-Dot}
+\index{Graphic Tools!Dot}
+\noindent\href{http://www.graphviz.org/}{Graphviz} Graph Visualization Software\\
+
+Dot是Graphviz套件中的一个工具，用于绘图。Dot擅长绘制如数据结构、继承关系之类的复杂图形。
+我所知的dot的一些应用，如Doxygen，KCachegrind等工具都依赖dot生成调用关系图。
+
+Dot的命令非常简单：\fbox{dot -Tpng graph.dot -o graph.png}。
+-T指明了输出图形的类型，Dot可以输出的图形类型包括：gif, png, svg, ps等。
+
+定义图的代码是：
+\begin{verbatim}
+digraph G{
+    main -> func;   /* comment */ // also comment
+}
+\end{verbatim}
+每行代码都需要以``;''结束；用C/C++注释符号作注释，即/**/或//作注释。
+
+在图中定义子图的代码是：
+\begin{verbatim}
+digraph G{
+    subgraph cluster0{
+        main;
+    }
+
+    subgraph cluster1{
+        func;
+    }
+
+    main->func;
+}
+\end{verbatim}
+子图必须以subgraph为关键字，且子图的名词必须以cluster打头。
+不能将箭头指向子图，只能指向子图中的元素节点。

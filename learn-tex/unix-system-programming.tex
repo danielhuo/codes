@@ -1,0 +1,56 @@
+\part{UNIX System Programming}
+
+UNIX系统编程知识的主要来源是W. Richard Stevens的\emph{Advanced Programming in the UNIX Environment}。
+另外的来源是GNU的手册，包括libc手册，libstdc++的手册等。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GNU C/C++ Programming
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{GUN C/C++ Programming}
+\section{libstdc++}
+\noindent\href{http://gcc.gnu.org/onlinedocs/libstdc++/manual/spine.html}{libstdc++ Manual} 官方手册。
+其中有关于g++实现的许多细节问题，关于兼容性，ABI等的说明。
+\noindent\href{http://gcc.gnu.org/onlinedocs/libstdc++/manual/configure.html}{Comiple g++} 官方指导。
+对编译选项的说明。
+\noindent\href{http://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html}{ABI} 官方关于ABI的说明。
+
+\subsection{C++ ABI}
+C++程序通常依赖于某些特定的运行时支持，如异常抛出和捕获。
+当C++程序被编译为目标文件时，对象成员的对齐方式，mangling name，虚函数的实现等，都大相径庭，
+这些细节定义于编译器的ABI Specification中(Application Binary Interface)。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% freqenct api
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Frequent API}
+\section{Date and Time}
+\subsection{Sleep}
+milliseconds - 毫秒，1/1000 秒。microsenconds - 微秒， 1/1000 毫秒。
+让UNIX程序休眠的系统调用有：sleep(), usleep(), nanosleep()。
+其中sleep()的单位是秒，usleep()的单位是微秒，nanosleep的单位是纳秒。
+UNIX上似乎没有专门以毫秒为单位的sleep函数。
+UNP上还介绍了用select(), poll()实现sleep函数的方法，可以精确到微秒。
+在man epoll上看到，epoll\_wait()的休眠单位是毫秒。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% singal and error handle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Signal and Error Handle}
+\blscmd{man 7 signal}查看信号说明，\blscmd{man 3 errno}查看错误说明。
+
+\blscmd{SIGKILL}, \blscmd{SIGSTOP}不能被捕获，阻塞，或者忽略。
+
+signal的信号值和对应解释：
+\blitem{SIGABRT, 6, Core}  {Abort singal from abort(3).}
+\blitem{SIGSEGV, 11, Core} {Invalid memory reference.}
+
+\blitem{SIGKILL, 9, Term}   {Kill signal}
+\blitem{SIGINT, 15, Term}   {Interrupt from keyboard, i.e. Ctrl-C。}
+\blitem{SIGALRM, 14, Term}  {Timer singal from alarm(2).}
+
+errno的错误码和对应解释：
+\blitem{9}   {Bad file descriptor.}
+\blitem{11}  {Resource temporarily unavailable}
+\blitem{104} {Connection reset by peer.}
+\blitem{113} {No route to host. 如果报这个错误，可能是对端的iptables设置，禁止了tcp连接端口。}
+\blitem{115} {Operation now in progress. 如果是这个错误，可能是设置非阻塞socket，在connect()时返回此错误码。}

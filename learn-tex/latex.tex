@@ -1,0 +1,251 @@
+\chapter{\LaTeX{} Notes}
+\index{\LaTeX}
+
+\section{Introduction}
+\noindent\href{http://www.ctan.org}{CTAN} the Comprehensive TeX Archive Network\\
+\href{http://www.ctex.org}{CTEX} 中文Tex\\
+\href{http://www.ctan.org/tex-archive/info/lshort/}{lshort} Ctan上lshort各个语言的版本，包括lshort文档的源码。
+这本小册子是一个德国人写的，英文名叫：The Not So Short Introduction to \LaTeXe，副标题是``112分钟学会\LaTeXe''。\\
+\href{http://en.wikibooks.org/wiki/LaTeX/Packages} {wiki上的\LaTeX宏包列表。} \\
+\href{http://blog.sina.com.cn/s/blog\_51e68f8d0100avil.html}{\LaTeX{} listings宏包备忘。}
+
+\TeX{} 被称作一种typographic语言，即一种排版印刷语言。
+
+如果往\TeX系统中添加了新文件，需要更新\TeX系统。
+te\TeX和fpTeX的命令是：``texhash''。
+Mik\TeX的命令是：``initexmf -\mbox{}-update-fndb''。
+
+\section{\LaTeX{} Command}
+\noindent $\backslash$stretch\{十进制小数\} 是一个弹性长度，其自然值是0pt，其伸展值等于十进制小数乘以$\backslash$fill。\\
+\noindent $\backslash$texttt\{文本\} 等价于\{$\backslash$ttfamily 文本\}，它使用当前系列与形状，
+但是打印机(typewriter)族的字体来打印文字。\\
+\noindent $\backslash$vspace\{高度\} 产生具有指定高度的竖直空白，当它位于页首或页尾时被忽略。\\
+\noindent $\backslash$hspace$*$\{高度\} 产生具有指定高度的竖直空白，当它位于页首或页尾时也不被忽略。\\
+
+
+\subsection{\LaTeX{} File Type}
+
+\begin{tabular}{|l|lp{\textwidth}|}
+tex     & \LaTeX源文件，用latex命令编译。   \\
+sty     & \LaTeX宏包文件，可以使用$\backslash$usepackage命令将宏包文件引入到\LaTeX中。\\
+dtx     & 文档化\TeX文件。是\LaTeX宏包文件的主要发布格式。\\
+ins     & 对应*.dtx文件的安装文件。网上下载\LaTeX宏包，一般会包含一个*.dtx文件和一个ins文件。
+            使用\LaTeX处理*.ins文件可以解开*.dtx文件。\\
+cls     & 定义文档外观形式的类文件，可以通过$\backslash$documentclass命令选取。\\
+fd      & 字体描述文件，告诉\LaTeX有关新字体的信息。\\
+dvi     & 设备无关文件，*.tex文件编译的主要输出文件。\\
+        & 可以使用DVI预览器预览，或使用dvips/dvipdf等程序输出PS或PDF文档。\\
+toc     & 存储所有的章节标题，再次编译时将读取该文件生成目录。\\
+lof     & 类似*.toc，用于生成图形目录。\\
+lot     & 类似*.toc，用于生成表格目录。\\
+aux     & 用于再次编译时传递辅助信息，如交叉引用的信息。\\
+idx     & 文档中如果包含索引，\LaTeX可使用该文件存储所有的索引词条。此文件需用makeindex处理，\\
+        & 详见位于\pageref{latex-tools-makeindex}页的第\ref{latex-tools-makeindex}节。\\
+\end{tabular}
+
+% end of Latex Introduction
+
+\section{Basic Kownledge}
+
+\subsection{\LaTeX{} Source}
+\LaTeX的源代码包括：
+\begin{itemize}
+\item 需要排版的文本。
+\item \LaTeX命令。
+\end{itemize}
+
+\subsubsection{特殊字符}
+特殊字符包括：
+\framebox{\# \$ \% \^{} \& \_ \{ \} \ {} } \par
+
+反斜杠不能通过$\backslash$$\backslash$得到，可以使用命令\$$\backslash$backslash\$生成反斜杠。
+
+显示空格符号通过命令\fbox{$\backslash$textvisiblespace}生成，如\textvisiblespace。
+
+带圈的符号通过命令\fbox{$\backslash$textcircled\{letter\}}生成，如：
+\textcircled{\scriptsize 1}
+\textcircled{\scriptsize a}
+\textcircled{\scriptsize c}
+\textcircled{c}。
+
+引号不能直接使用“。左引号由两个`(重音)产生，右引号由两个'(直立引号产生)。一个`和一个'产生一个单引号。
+
+\subsubsection{空白距离}
+空格和制表符等空白字符在\LaTeX中被视作相同的space，多个连续的空白被视作一个空白。
+两行文本间的空白标志上下段，多个空白行等同一个空白行。
+
+\subsubsection{\LaTeX命令}
+\LaTeX命令有两种格式：
+\begin{itemize}
+\item 以反斜杠$\backslash$开始，命令只由字母组成。命令后的空格、数字或任何非字母的字符都标志命令的结束。
+\item 由反斜杠$\backslash$和非字母的字符组成。
+\end{itemize}
+\LaTeX忽略命令之后的空格，因此如果需要在命令后得到空格，可以在命令后加\{\}和一个空格,
+或加上一个特殊的空格命令。\{\}将阻止\LaTeX吃掉命令后的空格。
+对比"\LaTeX without space"和"\LaTeX{} with space"。
+
+命令的参数放在\{\}中，命令的可选参数放在[]中。
+
+\subsubsection{注释}
+注释放在\%后，等同C++中的//。符号\%也可以用来断开不能含有空白字符或换行符的较长输入内容。
+如果注释的内容特别长，可以使用verbatim宏包提供的comment环境。comment环境中的注释不显示在文本中。
+
+% end of Latex Source
+
+\subsection{Environment}
+\index{\LaTeX!Environment}
+
+verbatim\index{\LaTeX!Environment!verbatim}可以将文本直接打印。
+verbatim宏包可以更好的达到这个效果。\ref{latex-macro-package-verbatim}。
+
+% end of "Latex Environment"
+
+\subsection{Box}
+\makebox[\textwidth]{central}\par
+\makebox[\textwidth][s]{spread}\par
+\makebox[\textwidth][r]{right}\par
+\framebox[\textwidth]{这叫中规中矩}\par
+\framebox[0.8\width][r]{从左边溢出了}\par
+\framebox[1cm][l]{从右边溢出了}\par
+
+命令\fbox{$\backslash$mbox\{text\}}保证把几个单词放在同一行上。
+命令$\backslash$fbox和$\backslash$mbox类似，它还能围绕内容画一个框，如每个命令周边的框就是fbox的功劳。
+
+% end of "Latex Box"
+
+\section{Macro Package}
+\index{\LaTeX!macro package}
+常用的宏包：\\
+\begin{tabular}{|l|l|}
+\hline
+宏包            & 说明 \\ \hline
+makeidx         & 提供排版索引的命令。随\LaTeX提供。\\ \hline
+verbatim        & 直接打印文本。\\ \hline
+fancyvrb        & 美化的verbatim。\\ \hline
+indentfirst     & 首行缩进。特别对中文有用。 \\ \hline
+listings        & 用于在\LaTeX中引用源码。\\ \hline
+xcolor          & 与listings搭配使用，源码语法高亮。 \\ \hline
+beamer          & 创建演示文稿。\\\hline
+\end{tabular}
+
+\subsubsection{verbatim宏包}\index{\LaTeX!macro package!verbatim}\label{latex-macro-package-verbatim}
+verbatim环境可以直接包含打印文本，而verbatim宏包则可以直接引入ASCII文本，命令
+``$\backslash$verbatiminput\{filename\}''即可。
+fancyvrb宏包是美化后的verbatim，它的输出和listings很相似。
+
+\subsection{listings}\index{\LaTeX!macro package!listings}
+\begin{quote}
+众里寻它千百度。
+\end{quote}
+
+listings宏包用于\LaTeX中的源代码引用，效果如下：
+\begin{lstlisting}
+int main(int argc, char* argv[])
+{
+    printf("hello, world!\n");
+    return 0;
+}
+\end{lstlisting}
+
+listings可以和xcolor搭配使用，让源代码语法高亮。
+listings的一个示例如下：
+\begin{Verbatim}[frame=single, rulecolor=\color{green}]
+\begin{lstlisting}[
+    language={[ANSI]C},
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside='',
+    xleftmargin=2em,
+    xrightmargin=2em,
+    frame=shadowbox,
+    aboveskip=1em]
+int main(int argc, char* argv[])
+{
+    /* comment */
+    printf("hello, '中国'!\n");
+}
+\end{lstlisting}
+\end{Verbatim}
+
+以上，numbers表示在源码前加以行号，可以指定行号的位置，左或右；
+numberstyle表示行号风格；之后是色彩的设置；因为litings不支持中文，
+所以如果在源码中包含中文，需要“转义”，用escapeinside指定转义符，
+以上用'单引号作为转义符；xleftmargin和xrightmargin指定了左右边距；
+aboveskip指定了上边距；frame指定了源码边框，以上为shadowbox。
+
+可以把listings的设置放在lstset\{\}中，
+这样就不用每次使用listings时都设置各项参数。
+
+\subsubsection{语言支持和语法高亮}
+\paragraph{语言支持}
+listings支持常见语言，如C(ANSI, Objective, Sharp), 
+    C++(ANSI, GNU, ISO, Visual), Python, \TeX(\LaTeX), 
+    make, XML, SQL,
+    PHP, Perl, Ruby, Lisp, Java等。
+
+\paragraph{语法高亮}
+可以自由配置高亮单词，在lstset\{\}中添加如：
+\begin{lstlisting}
+emph={boost},emphstyle=\color{red},
+emph={[2]vector,list,iterator},emphstyle={[2]\color{blue}}
+\end{lstlisting}
+这样的语句即可。
+
+\paragraph{定制边框}
+可以设置代码的边框，在$\backslash$begin\{lstlisting\}[]中添加frame设置。
+frame的可选值为：none, leftline, topline, bottomline, lines, single, shadowbox。
+lines表示在上下划线，single表示在四周划线，shadowbox表示一个阴影框。
+frame的另一个表示方式是取\{trblTRBL\}的任意子集，其中大写字母表示双划线。
+
+\subsection{beamer}\index{\LaTeX!macro package!beamer}
+Beamer是Till Tantau在2003年创建的，用于演示文稿。帮助手册参考：
+\verb|texmf\doc\latex\beamer\beameruserguide.pdf|。
+
+% end of Macro Package
+
+\newpage
+\section{Large Document}
+\subsection{Create Index}
+\index{\LaTeX!index}
+\begin{enumerate}
+\item 引入宏包："$\backslash$usepackage\{makeidx\}"。
+\item 在导言中使用命令："$\backslash$makeindex"激活索引命令。
+\item 要索引的内容通过命令："$\backslash$index\{key\}"指定，key是索引项的关键词。
+\item 当\LaTeX处理源文件时，每个$\backslash$命令都会将适当的索引项和当前页面写入一个专门的文件*.idx中，因此需要使用外部命令
+"makeindex\label{latex-tools-makeindex} fname.idx"来生成索引。
+\item 在源文件的适当位置(一般位于文档最后)，将索引文件引入源文件，使用命令"$\backslash$printindex"。
+\end{enumerate}
+
+\newpage
+\section{Chinese}
+\subsection{Chinese Bookmark}
+在tex文档序言部分引入：
+\begin{lstlisting}
+\usepackage[pdftex,CJKbookmarks]{hyperref}
+\end{lstlisting}
+
+王垠提供了一段代码，也可以达到以上效果：
+\begin{lstlisting}[language=TEX]
+\usepackage[pdftex]{hyperref}
+\pdfstringdefDisableCommands{
+\let\CJK@XX\relax
+\let\CJK@XXX\relax
+\let\CJK@XXXp\relax
+\let\CJK@XXXX\relax
+\let\CJK@XXXXp\relax
+}
+\end{lstlisting}
+
+生成中文书签的步骤：
+\begin{lstlisting}
+pdflatex cs.notes.tex
+gbk2uni cs.notes.out
+pdflatex cs.notes.tex
+\end{lstlisting}
+
+CTEX中带了gbk2uni这个小工具。
+
+% end of Latex

@@ -1,0 +1,323 @@
+\part{Miscellanea Notes}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% bldoc introduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introduction}
+Bldoc主要是学习工作中的随记，大多来自HOWTO、man手册、各种软件自带的帮助文档，技术书籍，
+以及网上看到的CS相关的技术文章或逸闻趣事，另外还有极少的个人感悟。
+不论程序设计还是文档写作，一个诀窍是Copy and Plaster。
+然而，俗话说吃亏就是占便宜，反过来讲，便宜不好占；因此本文绝大多数的内容，虽非原创，但不复制粘贴。
+这样就可以避免使文档内容呈爆炸式的增长，也可以在键入每个字的时候，加深印象。
+好记性不如烂笔头，书不厌读，识不厌记。
+
+文档的内容主要是：
+\begin{itemize}
+\item CS随记，包括CS逸闻轶事逸言，CS读书笔记等。
+\item C/C++程序设计，包括语言、库、调试技巧等。
+\item UNIX程序设计，包括编译系统、系统编程、网络编程等。
+\item UNIX环境，包括Bash、系统命令等。
+\item UNIX网络，如iptable/netstate/tcpdump等各种网络工具的使用。
+\item 网络协议，如TCP/IP/HTTP/FTP/BT等。
+\item 数据结构和算法。
+\item 硬件相关的笔记。
+\item Python程序设计。
+\item Vim编辑器。
+\item 使用\LaTeX或者DocBook排版。
+\end{itemize}
+
+整个文档是在学习\LaTeX{}的过程中完成的。也许永不完成。因为只要还在这个行业，就不可能停止记录。
+文档的质量良莠不齐，但我也并不追求完美，这份文档的初衷只是个人的一个学习笔记。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% reading notes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{reading.notes.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% working notes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Working Notes}
+\section{Working In Funshion}
+\bldate{2009/07/09} 阅读HS源码时看到的hash算法，有来自UNIX system V的ELFhash，
+来自阎宏飞、谢正茂在天网搜索引擎中使用的hash算法，另有一种是谢正茂的hash算法。
+下载了个一致性hash(consistent hash)的实现，据说是memcache client的一个实现，
+由ketama实现。
+
+\bldate{2009/07/08} BS地址service-bs.funshion.com
+
+\bldate{2009/07/08} fget公网运行的一个问题。fget单独运行正常，被MS调用则出错。
+因为MS fork()/exec()之前，已有大量打开的文件描述(数千个)，fget继承父进程打开的文件描述符，
+因此socket()创建的sockfd的值>1024，用非阻塞connect()后调用select()判断sockfd是否可写，
+而select()系统限制为1024，因此select这里即出错。解决方案是在fget启动时，关闭文件描述符。
+
+\bldate{2009/06/19} web查看homeserver信息：admin.funshion.com
+
+\bldate{2009/06/19} 测试了socket选项SO\_REUSEADDR。在Fedora9上测试，在一个进程内部，
+不能对同一个端口有两次bind()调用，也不能有两个进程同时绑定到同一个端口。
+在CentOS 5.2上测试，一个进程内部，两个socket可以bind到同一个端口，
+但两个进程不能同时bind到同一个端口。
+man 7 socket上关于SO\_REUSEADDR的说明中有提及不能bind到同一个端口。
+在Windows上，一个进程内部可以多次bind同一端口，也可两个进程bind同一端口，只是结果是未知的。
+
+\bldate{2009/06/17} 代码审查时发现的问题。send失败，可休眠1秒再次尝试。
+accept如果需要限制被动连接数，可先accept，再close。
+
+\bldate{2009/06/17} 调试发现的问题。对本的机器做了对等端口映射(192.168.16.252:9501映射公网端口9501)。
+fget接受被动连接。发现有被动连接进来的peer发送bitfield的长度和本地任务不匹配。
+但只有被动连接的peer有此问题，主动连接则无。缘故是：在tracker上announce后，
+客户端可能已存储fget信息，当fget切换另一任务下载时，客户端可能连接fget并交互旧任务的bitfield。
+解决方法是在handshake时，判断任务hash，如果不是当前任务hash，则中断连接。
+
+\bldate{2009/06/15} 调试是发现，两个函数调用之间参数被改变，如foo(par) \{ boo(par); \}，
+函数声明foo, boo的参数都为unsigned int，且par的类型也为unsigned int，但调试时仍发现，
+在foo(par)时par值为VAL1(10485760)，在boo(par)时par值为VAL2(4096)。但重新编译后，再次运行，无此问题。
+非常诡异。
+
+\bldate{2009/06/03} 此前以往八月，皆属无稽之谈。
+
+\bldate{2009/05/31} 连接公网peer，连接速度很慢，不容易连接上。因此如果连接成功，则不要轻易断开。
+另一则是利用被动连接。
+
+\bldate{2009/04/27} 最近希望看一些高端服务器设计方面的论文或者书籍。不过资料似乎不多。
+从C10K等看起，但貌似资料有些旧了，都是好些年前。看TAoUP，上面对线程编程评价似乎很低，
+在High-Performance-Server-Design上也看到关于线程的代价评论，在另一篇Why-Threads-Are-Bad-Idea里也有
+把线程与event编程模型的对比。继续深入学习。
+
+\bldate{2009/04/23} fget项目中做了一个修改。将utility.h修改为fget\_utility.h，然后单独建立一个utility目录，
+其中又有一个utility.h文件，并在fget\_utility.h中包含utility.h。经过一些简单的试验，
+如gcc -E a.cpp输出没有包含utility.h中声明的函数，在gcc -E b.cpp的输出却包含utlity.h中声明的函数。
+比较奇怪的问题。查明结果是在把原始的utility.h改为fget\_utility.h时，忘了修改头文件的宏定义，即\#ifndef \_UTILITY\_H。
+再次说明一个问题，切勿冒冒然修改程序，想清楚前后关联影响，再修改。
+
+\bldate{2009/04/23} 当机器有多个网口时，一般eth0配置为外网地址，eth1配置为内网地址。当bind时，
+如果不指定地址，用INADDR\_ANY，则由内核选择一个网口。如果bind到指定网口，可能路由时不能抵达目标地址(未验证)。
+
+\bldate{2009/04/07} select()返回-1，表示有连接坏掉了，此时也可能受到了SIGPIEPE信号。此时sockfd $>$ 0还成立，
+因此要把这个坏掉的连接抓出来，有几种方法。1，用select依次调用每个sockfd，如果返回-1，则此连接已坏。
+2，调用一些socket函数，如果返回错误，则此连接坏掉。注意如果调用send(), recv()等函数，可能另有问题，
+如，sockfd是非阻塞的，但连接已坏，此时可能被send, recv阻塞。这种情况下，可以尝试调用getsockopt等函数判断。
+另外，select()返回-1，如果errno为EINTR，则此错误可以忽略。
+
+\bldate{2009/03/31} 测试fget时，如果连接公网Tracker，则fget也需要有公网ip和port，否则fget之间不能互联。
+对于非阻塞socket的connect()调用，在返回EINPROGRESS后，select()的等待时间可为4秒。
+
+\bldate{2009/03/26} 今天得知运营是用PRTG的工具监视流量的。当然是UI是web页面。
+
+\bldate{2009/03/12} 系统调用的错误处理。在send/write后，应该仔细检查返回值是否等于发送缓冲的长度。
+如果缓冲区已满，则应保留未发送的数据，等待下一次send。
+
+\bldate{2009/03/10} 公网调试MediaServer时发现的问题。kill了mediaserver，但很快它自己又运行了。
+注意检查deamon。如果有deamon，先killdeamon。另外，用valgrind检查MediaServer内存时，发现没有MediaServer
+吐不出流量，很奇怪。
+
+\bldate{2009/03/10} 检查函数返回值时的低级错误。在网络编程时，如果是非阻塞socket，
+则send/recv返回-1，且errno是EWOULDBLOCK(或者EAGAIN)，则应该忽略这个错误。
+但注意与EWOULDBLOCK比较的对象是errno，而非send/recv函数的返回值(-1)。
+
+\bldate{2009/02/26} 网络速度的快慢。但发现自己写的网络程序速度慢，要主要检查两个方面，
+一是send速度，一是request速度。如BT程序，如果Client请求发的频率很低(请求慢)，
+则Server发送的数据自然就少，反应到Monitor上，就表象为速度慢。
+而且网络程序，如果发现问题，需要检查连接两端，先确保一端没有问题，再调试另一端。
+所以发现“速度慢”之类的问题，不要忽略了请求速度的控制。
+
+\bldate{2009/02/26} TCP发送窗口的问题。调试时发现一条TCP连接速度较快，
+但用抓包器观察，连接双方的TCP窗口却很小，特别是TCP三次握手期间，第1和第2次握手交换的窗口还较为合理，
+但第3次握手的窗口就非常低。这个问题纠缠了数天，后来查明原因是：
+TCP最初设计窗口大小为16bit的值，即最大为65535字节；后来对TCP协议的扩展中，增加了一个
+window scale，是16bit，可用其中的[0,14]，wscale在SYN报文(SYN报文在3次握手的前两次中出现，
+第3次是ACK报文)中声明，之后发的窗口，都要经过这个wscale的计算。如wsacle为7，window为56，
+则实际的window大小为：$56 * 2^{7}$，即7168。
+
+\bldate{2009/02/24} 调试程序最怕遇见的时随机出现的问题。memcpy时常导致core dump，
+但查不出究竟。在memcpy前做了非常详细的参数检查，许多的assert。后来发现这样做其实有些无济于事，
+因为assert在这里不能找出问题根源(或者应该用异常?)。数小时的努力后，
+放弃调试，开始源码阅读(write by myself -\_-!!)，数分钟后发现了问题所在。
+精简的代码逻辑如下：
+\noindent\begin{lstlisting}[language=C++]
+pointer* p = arr_have_long_name.find();
+for(int i = 0; i < arr_have_long_name.size(); ++i){
+    // do some check, but unfortunate, p is changed
+    p = arr_have_long_name[i];
+    check(p);
+}
+return p;
+\end{lstlisting}
+教训是，最经济的排错方法是仔细阅读源码，而非利用各种工具或者不适用的技巧。
+
+\bldate{2009/02/10} 用GDB调试的一个问题。编译时加-g参数，编译生成a.out。
+在serv-a上编译，在serv-b上调试。在GDB中用edit查看源文件，发现源文件不同；
+用系统命令md5sum计算serv-a/a.out和serv-b/a.out，发现两个的MD5值却完全相同。
+导致此问题的原因是：-g参数并不将源代码嵌入可执行程序，而只是在可执行程序中
+嵌入调试信息，与源代码关联起来。因此在serv-b上看到程序源码，完全出于巧合，
+即假设在serv-a的/home/bailing/编译./hello.cpp，而在serv-b的/home/bailing/目录下，
+恰好存在一个名为hello.cpp的文件，因此被GDB发现；如果没有hello.cpp，
+则GDB会抱怨说找不到源码。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% other notes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Other Notes}
+\noindent\href{http://lamp.linux.gov.cn/jinbuguo\_florilegium.html}{金步国的主页} 
+严谨的翻译和原创作品，实用。\\
+\noindent\href{http://www.ringkee.com/}{肥肥世家}
+丰富的学习笔记。\\
+\noindent\href{http://docs.huihoo.com/homepage/shredderyin/}{王垠的个人主页}
+\LaTeX{} 等介绍。\\
+\noindent\href{blog.csdn.net/haoel}{陈皓} CSDN博客。Makefile、GDB调试等文章。\\
+\noindent\href{http://blog.youxu.info/}{4G Spaces} 计算机八卦等。\\
+\noindent\href{http://blog.csdn.net/g9yuayon/}{袁泳 \textbar{} 负暄琐话} \\
+\noindent\href{http://blog.csdn.net/pongba/}{刘未鹏 \textbar{} C++的罗浮宫} \\
+\noindent\href{http://mindhacks.cn/}{刘未鹏 \textbar{} Mind Hacks} \\
+
+\bldate{2009/02/24} 搜索Linux下的网络监测工具很是费劲，最后发现的一个较好的搜索词为：
+Linux network traffic monitor tool。
+
+listings\footnote{\LaTeX{} 的一个宏包，用它排版计算机程序。}的手册介绍了一个让\TeX{} crash的技巧。
+在\LaTeX{} 中引入以下源码：
+\begin{lstlisting}
+\lstdefinestyle{crash}{style=crash}
+\lstset{style=crash}
+\end{lstlisting}
+然后手册的作者说：Only bad boys use such recursive calls, 
+but only good girls use this package.
+
+逸闻趣事，从《计算机网络4/e》8.3.2节上看到的：
+第一个公开密钥算法是背包算法（MerKle and Hellman，1978），
+算法的发明者Ralph Merkle对自己的算法非常自信，因此他悬赏100美金给破解算法的人。
+Adi Shamir（即RSA中的S）迅速的破解了算法，领取了奖金。
+但Merkle并不气馁，又加强算法，并悬赏1000美金给破解算法的人。
+这次Ronald Rivest（即RSA中的R）也迅速地破解了该算法，并领取了奖金。
+Merkle不敢再为下一个版本悬赏10,000美金了，所以“A”（Leonard Adleman）很是不幸，无法领取奖金了。
+背包算法不再被认为是安全的，也没在实践中使用。
+
+\href{http://developers.solidot.org/article.pl?sid=09/03/24/0859257}{这里}看到的关于Vi和Emacs的趣闻。
+说是海盗用Emacs，忍者用Vi。总所周知Emacs拥有强大无比的定制和扩展能力，而海盗也无时不在定制化他们的趁手工具，
+Emacs确实比Vi慢，但海盗并不在意，因为他们经常喝的醉醺醺的。
+英文原文在\href{http://philosecurity.org/2009/03/23/pirates-and-ninjas-emacs-or-vi}{这里}。
+
+John W. Backus: You need the willingness to fail all the time\ldots{} You have to generate
+many ideas and then you have to work very hard only to discover that they don't work.
+And you keep doing that over and over until you find one that does work.
+
+Edmund Burke: All that is needed for the triumph of misguided cause is that good people do nothing.
+[谬误想要获得胜利，只需好人袖手旁观。]
+
+BBN had a big contract to implement TCP/IP, but their stuff didn't work, and Joy's grad student
+stuff worked. So they had this big meeting and this grad student in a T-shirt shows up, and they said,
+"How did you do this?" And Bill said, ``It's very simple, you read the protocol and write the code."
+
+Don says that he chose the term in hopes of making the originators of the term ``structured programming"
+feel as guilty when they write illiterate programs as he is made to feel when he writes unstructured programs.
+
+Who do you think is the best coder, and why?
+
+Leonardo Da Vinci是``从Vinci来的Leonardo"之意。
+
+John Carmack, Castle Wolfstein, doom, doomII, Quake的作者。其简历说自己的专长是``Exhaust 3-D technology"。
+
+C.A.R.Hoare: Premature optiomization is the root of all evil.[提前优化是万恶之源。]
+
+只有向后看才能理解生活，但是要生活好，则必须向前看。 -SREN AABYE KIERKEGAARD 日记(1843)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% temp notes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Temp Notes}
+\blcomment{
+本章为网络浏览时随手之笔记，大多为外文资料随译之笔，并未修饰言辞。
+且随意放置，未加管束。其中所记，多未加实践实验，权当开阔眼界。
+待时日既久，材料既殷，再分门别类。}
+
+Linux内核源码在如\blscmd{/usr/src/kernels/2.6.18-92.el5-x86\_64}的目录，但似乎其中没有源文件。
+
+DCCP, Datagram Congestion Control Protocol，数据报拥塞控制协议。
+\href{http://www.linuxfoundation.org/en/Net:DCCP}{这里}有比较全的介绍。
+dccp在Linux内核的\blscmd{net/dccp}这个目录。DCCP是一个传输层协议，
+在RFC 4340-4342中有其说明。
+
+CDN, Content Delivery(or Distribution) Network，
+有两种类型的content，下载和流。下载类的如页面访问和视频。流如在线视频。
+应该是服务器均衡负载的一种实现网络。wiki上介绍说，策略性的放置服务器，
+可以获取吞吐量大于backbone主干线的能力。CND减少了洲际(interconnects)的，
+public peers, private peers和bacbones的负担，降低了delivery的开销。
+避免了负载于backbone或peer link的压力，而将之重定向且分摊于edge servers。
+
+TCP因丢包和时延而受损，而CDN置服务器于edge networks，并使用户易于访问。
+某种CDN，如高速web页面的cache。当靠近server的client访问web时，此server查询cache
+中是否存在此页面，若有直接返回用户；若无，则从其他server获取，并cache之。
+
+CRT(C Runtime Library)。MSDN上看到的，VC编译时的C运行时库，有多种选项，其说明如下：\\
+\begin{tabular}{|l|l|l|l|}\hline
+编译选项    & 关联的DLL     & C运行时库         & 说明  \\\hline
+/MT         & 无。          & libcmt.lib        & 多线程，静态链接 \\\hline
+/MD         & msvcr80.dll   & msvcrt.lib        & 多线程，动态链接 \\\hline
+/MTd        & 无。          & libcmtd.lib       & 多线程，静态链接，调试版本 \\\hline
+/MDd        & msvcr80d.dll  & msvcrtd.lib       & 多线程，动态链接，调试版本 \\\hline
+\end{tabular}
+
+之前有单线程的C运行时库(libc.lib, libcd.lib,用/ML, /MLd开启)，但现在已不支持。
+对于C++运行时库，把以上libc都变为libcp即是。编译选项相同。
+
+wiki上看到说lihttpd可以承受每秒1000次的访问。在Lighttpd的主页上见其1.5版使用aio，
+据称效率有极大的提高。
+
+用\blscmd{F-Secure SSH Client Trial}在Windows和Linux间通过SSH传输文件。
+
+用\blscmd{iftop}可以查看网络流量，比\blscmd{vnstat}更为细致的输出。不过似乎有些字体问题。
+
+\blscmd{COW, Copy-On-Write}技术用在\blscmd{fork()}上，当父进程调用fork()系统调用后，
+并不直接将父进程的页面复制到子进程，而是两者共享地址空间。只有当其中一方对页面执行写操作时，
+才复制其副本给修改者。
+
+\blscmd{vfork}创建新进程后，父进程挂起，指导子进程执行完成退出，或执行\blscmd{execve()}系列函数。
+
+\blscmd{UPnP}(Universal Plug and Play)，简单的理解可以是：自动端口映射。这样内网的端口，
+即可在通过NAT时做自动端口映射，即对公网开放了这个端口。要使用UPnP，需要Modem，OS和软件的支持。
+在Windows中开启UPnP需要以下设置：
+\begin{itemize}
+\item 控制面板，添加删除程序，添加/删除Windows组件，网络服务，UPnP用户界面。
+\item Windows防火墙，例外选项中选中UPnP框架。以上两步，可以通过：网上邻居，
+显示联网的UPnP设备的图标，一次完成。
+\item 控制面板，管理工具，服务，启动：SSDP Discovery Service和Universal Plug and Play Device Host
+两项服务。
+\end{itemize}
+
+\href{http://www.usenix.org/about/flame.html}{USENIX frame award}。
+
+斯德哥尔摩综合症又称为人质情绪、人质综合症，是指犯罪的被害者对于犯罪者产生情感，
+甚至反过来帮助犯罪者的一种情绪。
+
+浏览DHT时看到的外部链接，一个名为memcached的系统，用在加速需要与数据库交互动态页面访问场合，
+被youtube, twitter等网站使用。\href{http://www.danga.com/memcached/}{这里}。
+
+\href{http://www.xmlbar.com/}{稞麦网}提供下载视频网站的工具。如下载优酷视频。
+
+\href{http://www.devtopics.com/101-great-computer-programming-quotes/}{101条计算机妙语}。
+\href{http://news.csdn.net/a/20090522/211469.html}{中文版}。
+
+ip转发，查看：
+\bllcmd{cat /proc/sys/net/ipv4/ip\_forward}
+也可修改\blscmd{/etc/sys}中的\blscmd{net.ipv4/ip\_forward}值。
+
+\href{http://www.planet-lab.org/}{planet-lab}计算机网络实验。
+
+安装\blscmd{wordpress}，用作本地博客系统。依赖PHP, MySQL。
+单独安装PHP, MySQL, Apache组件较为繁琐，可用\href{http://www.apachefriends.org/en/xampp.html}{xampp}软件。
+此软件携带以上程序。安装xamp后，设定Apache监听端口，编辑\blscmd{/apahche/conf/httpd.conf}，
+如果默认80端口被占用，可改用8080等其他端口。再次启动Apache。用浏览器访问
+\blscmd{http://localhost:8080/phpmyadmin}，选择左侧之mysql,继而可查看user。默认有root用户，且密码为空。
+
+MySQL的默认名为“localhost”，在wordpress的解压目录中，修改wp-config-sample.php，填入数据库信息。
+其中已有注释提示，修改数据库名为wordpress，填入用户名(root)，密码()，MySQL的名称(localhost)。
+修改wp-config-sample.php为wp-config.php，并将整个wordpress目录放在\blscmd{/xampp/htdocs/}下。
+或者如果单独安装apache，则放在\blscmd{/apache/htdocs}目录。
+注意，要现在MySQL中建立wordpress数据库，不用见表等操作，但需要先建立此库。
+
+\href{http://gigamonkeys.com/book/}{Practical Common Lisp}。
+
+
+
+if browser were woman.
+
+

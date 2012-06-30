@@ -1,0 +1,39 @@
+\part{Python Programming Lanauage}
+\chapter{Language Introduction} \label{language-python}
+\noindent\href{http://www.woodpecker.org.cn/diveintopython/}{Dive into Python在线} Python啄木鸟在线。
+
+\section{From C/C++}
+Python中Bool关键字有\blscmd{True}, \blscmd{False}。
+
+Python中没有switch语句，建议是使用\blscmd{dictionary}。
+
+Python的for循环从根本上不同于C/C++的for语句，而类似foreach语句。
+
+Python中只有一种浮点数，即float，表示机器一级的双精度浮点数。为了不增加语言的复杂度，Python里没有double这种数据类型。
+
+Python中进行数值运算的模块是\blscmd{cmath}，大概对应C/C++的\cppheader{math.h}。
+cmath.pi, cmath.e定义了两个常量。而像正余弦计算，对数、自然对数、开方、指数等运算，均在这个模块提供。
+
+Python中复数(Complex Number)是内建类型，通过\blscmd{z=complex(1.0,2.2)}，或\blscmd{z=(1.0+2.2j)}可以定义复数。
+通过\blscmd{z.real}和\blscmd{z.imag}访问复数的实部和虚部。
+
+类似C++标准库的map，Python中有内建\blscmd{dict}。
+
+Python中数值与字符串相互转换的函数是：\blscmd{int()}，\blscmd{float()}、\blscmd{str()}。
+
+Python中，\blscmd{type()}即可查看对象类型。
+
+\section{Statement}
+\subsection{Loop}
+
+\paragraph{for-loop} for的基本形式是：\blscmd{for i in sequence}。
+
+\section{Build-in}
+\subsection{Build-in function}
+\blitem{len(x)}{统计x的元素个数，x通常是序列(string, tuple, list)或字典等。}
+
+\subsection{array}
+array是内置数组，它的常用成员函数是：
+\blitem{count(x)}{计算x的出现次数。}
+\blitem{append(x)}{push back x.}
+array没有如size()的成员函数，可以用内建函数\blscmd{len()}计算数组元素个数。

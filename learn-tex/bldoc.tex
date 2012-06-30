@@ -1,0 +1,55 @@
+%-------------------------------------------------------------------------------- 
+\documentclass[a4paper,11pt,oneside,openany]{book}
+
+\input{blsty.tex}
+
+\begin{CJK*}{GBK}{song}
+\title{\huge \bfseries Bldoc, Berlin's Document}
+\end{CJK*}
+
+\makeindex
+
+\begin{document}
+\begin{CJK*}{GBK}{song}
+
+\maketitle
+
+\clearpage      % 如果是双面打印，即openrigth，则使用\cleardoublepage
+\addcontentsline{toc}{chapter}{Contents}    % 将目录本身加入到目录中
+
+\tableofcontents
+
+% 避免影响目录
+%\setlength{\parindent}{0pt}                        % 将段首缩进设置为0
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}    % 修改段落间距
+
+%-------------------------------------------------------------------------------- 
+
+%\input{miscellanea.tex}
+%\input{cpp.tex}
+%\input{python.tex}
+%\input{programming-language.tex}
+%\input{unix.tex}
+\input{unix-tools.tex}
+%\input{unix-system-programming.tex}
+%\input{unix-network-programming.tex}
+%\input{edit-and-typeset.tex} % vim, latex, metapost, graphzi, etc.
+%\input{protocol.tex}
+
+%-------------------------------------------------------------------------------- 
+
+\clearpage      % 如果是双面打印，即openrigth，则使用\cleardoublepage
+\addcontentsline{toc}{chapter}{Bibliography}    % 将参考文献加入到目录中
+
+\begin{thebibliography}{99}
+\bibitem{tcpl} B.Stroustrup: The C++ Programming Lanauage(2002)
+\end{thebibliography}
+
+\clearpage      % 如果是双面打印，即openrigth，则使用\cleardoublepage
+\addcontentsline{toc}{chapter}{Index}    % 将索引加入到目录中
+
+\printindex
+
+\end{CJK*}
+\end{document}
+%-------------------------------------------------------------------------------- 

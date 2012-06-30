@@ -1,0 +1,244 @@
+\part{C/C++ Programming Language} 
+\index{C/C++} \label{language-c-cpp}
+
+\chapter{Memory}
+包括内存的分配管理，GC相关技术，内存越界，内存泄漏等技术与工具。
+\section{Buffer Overflow Protection}\label{cpp-buffer-overflow-protection}
+\noindent\href{http://en.wikipedia.org/wiki/Buffer_overflow_protection}{wiki上Buffer Overflow保护的介绍。}
+
+内存溢出保护的两个知名实现是StackGuard和Stack-smashing Protection(SSP, or ProPolice)。
+
+\chapter{C/C++ Miscellanea}
+\noindent C语言的最佳参考是~K\&R，C++语言的最佳参考是TC++PL \cite{tcpl}。 \par
+\noindent\href{http://www.cplusplus.com/}{C++ Resources Network}，其中最常用的一个部分是
+\href{http://www.cplusplus.com/reference/}{C++标准库的参考}。\par
+\noindent\href{http://gcc.gnu.org/projects/cxx0x.html}{GCC对C++0x的支持列表}。 \par
+\noindent\href{https://developer.mozilla.org/En/C\_\_\_Portability\_Guide}{Mozilla关于编写可移植C++代码的指导}。\par
+\noindent\href{http://gcc.gnu.org/onlinedocs/cpp/Predefined-Macros.html}{GNU C/C++ Predefined Macros}
+
+\chapter{GNU C/C++ Programming}
+在Fedora 10, GCC 4.3.2的实现环境中，map的一个insert操作，需要3次拷贝构造，3次析构。
+
+\section{Language and Library}
+
+\blscmd{g++ (GCC) 3.4.6 20060404 (Red Hat 3.4.6-3)}不支持std::bitset的to\_string()函数。
+编译时有如下输出：\bllcmd{error: no matching function for call to `std::bitset$<$8u$>$::to\_string()'}
+
+C++中动态分配数组是未经初始化，勿忘初始化数组。
+
+C/C++的预定义宏包括：\_\_FILE\_\_, \_\_LINE\_\_，
+另外C99引入了\_\_func\_\_，这个宏是小写。在GNU中则早已具备一个名为\_\_FUNCTION\_\_的宏。
+GNU的预定义宏扩展还包括：\_\_VERSION\_\_(GCC版本号)等。
+
+\cppheader{string.h}中，除了memmove外，其他函数都没有定义重叠对象间的复制行为。strerror()也在\cppheader{string.h}头文件中。
+
+\chapter{Boost Library}
+\noindent\href{http://groups.google.com/group/boost\_doc\_translation}{中文Boost的GoogleGroup}，主要致力于
+翻译Boost文档。更新速度较快，目前有1.38的文档。
+
+Boost官方网站导航\\
+\begin{tabular}{ll}
+\href{http://www.boost.org/users/history/}{历史列表}  & Boost库的所有历史版本在此。\\
+\end{tabular}
+
+\section{Boost Compile and Install}
+\paragraph{Compile in Linux}
+在Linux下编译Boost。
+
+\paragraph{Static Link boost}
+静态链接Boost库时，需注意Boost库的依赖，如：filesystem依赖system。
+当静态链接失败时，可以用\blscmd{ldd}查看对应的动态库，检查是否有其他依赖，
+若有，将依赖的静态库一并链接即可。
+
+另一个需要注意是，静态链接boost，需要把生产的目标文件放前面，boost静态库放后面。
+否则链接时gcc报出一大堆错误。
+
+再一个需要注意是，如果静态链接boost::thread，那么一定要在编译时加上-lpthread参数。
+否则运行时会有boost::thread的断言错误。
+
+经gcc4.3.2编译的boost1.36，其子库program\_options在gcc3.4.6上静态链接失败。
+因此需要在gcc3.4上重新编译。因link报错是说输入输出流中有函数未定义，因此怀疑是stdc++的缺陷。
+
+\section{boost::thread}
+Boost::thread的介绍\href{http://www.boost.org/doc/libs/1\_38\_0/doc/html/thread/changes.html}{文档}写道：
+自1.34发行以来，Boost.Thread发生了翻天覆地的变化，这个库的几乎每行代码都发生了改变。
+
+\section{boost::dynamic\_bitset}
+boost::dynamic\_bitset相比std::bitset的好处在于，
+dynamic\_bitset无需在编译时知道bitset的大小。
+但dynamic\_bitset仍然是一个不完备的容器，例如它没有begin()/end()等函数返回的迭代器，
+因此许多标准算法就不能用于dynamic\_bitset。
+
+有几种方法可以将dynamic\_bitset转换为字符串：
+\begin{itemize}
+\item 用iostream/stringstream等输入输出流。
+\item 用to\_string(dynamic\_bitset, string)函数，由boost::dynamic\_bitset库提供。
+\item 用for循环，将dynmic\_bitset的每一位输出，用operator[]输出[0, size()]的每一位。
+此种输出，与输出流的输出的bit流顺序正好相反。
+\end{itemize}
+
+\section{boost::string\_algo}
+C++标准库的字符串是个巨库，但仍然没有如：icase\_compare(),
+即忽略大小写的字符串比较等函数。遗憾的是，在Boost里也没发现这样一个函数。
+Boost中倒是可以将字符串大小写转换，避免用C库的to\_uppper()和to\_lower()进行单个字符转换。
+
+\begin{lstlisting}
+#include <boost/algorithm/string.hpp>
+string msg("Hello World\n");
+void boost::to_upper(msg);
+string boost::to_upper_copy(msg);
+\end{lstlisting}
+boost::to\_upper将修改传入的字符串，并返回void。如果不改变字符串且返回转换字符串，
+则使用对应的\_copy函数。
+
+\section{BOOST\_FOREACH}
+BOOST\_FOREACH应该算是一个小巧实用的库，支持STL容器，内嵌数组等。
+BOOST\_FOREACH库最早出现在boost 1.34.0。
+
+\begin{lstlisting}
+#include <boost/foreach.hpp>
+list<Peer*> plist;
+BOOST_FOREACH(Peer* peer, plist){
+    peer->send_have();
+}
+\end{lstlisting}
+在遇见小循环时，BOOST\_FOREACH似乎要比boost::bind和boost::lambda简单明了。
+
+\section{boost::format}
+Boost介绍format称它是printf-like的一个库。
+boost::format是对printf和cout的一个很好补充。printf是类型不安全的，而且不能扩展，
+而cout控制输出格式等方便又过于麻烦，boost::format则兼备两者之优，并独有所擅长。
+
+\begin{lstlisting}
+#include <boost/format.hpp>
+boost::format("%s %3.2f%% %8d") %"info" %100.00 %1024;
+\end{lstlisting}
+以上即为熟悉的C风格。但boost::format还支持其他许多种的输出风格。
+
+\chapter{log4cxx}
+\noindent\href{http://logging.apache.org/log4cxx/index.html}{log4cxx Homepage} Apache项目组的log4cxx介绍。 \\
+\noindent\href{http://www.dreamcubes.com/blog/?itemid=59}{log4cxx xml configure demo} 一个非官方的xml配置例子。
+其中的xml配置文件已复制到了本地，因为它们太有用了。 \\
+\noindent\href{http://expat.sourceforge.net/}{Expat库} log4cxx依赖这个XML解析库。\\
+
+Apache log4cxx是一个C++的日志框架，是从log4j(j: Java)移植而来。
+~log4cxx~使用APR(Apache Portable Runtime)。
+
+如果调试人员不能接触代码，或是一个多线程大型的程序，使用日志是跟踪程序的好方法。
+日志可以提供精确的context。日志也可以看作是很好的审核(auditing)工具。
+日志的缺点则是会使程序变慢，而且太多的日志也会导致scrolling blindness。
+而log4cxx则很好的解决了这些问题。可以通过修改log4cxx的配置文件，在不修改源码的基础上，控制日志行为。
+
+我使用的log4cxx版本是：0.10.0，编译程序的链接库是：liblog4cxx.so.10。
+
+\section{Compile log4cxx in Linux}
+log4cxx的依赖库包括：apr, aprutil, expat库。
+
+
+在Linux下编译log4cxx，发现编译时竟然有头文件未包含的错误。
+例如使用memmove等函数，但没有include \cppheader{cstring}，类似的低级错误，
+而且至少有三四个文件有类似错误吧。
+
+因为log4cxx依赖APR，因此下载apr库一起编译，\href{http://apr.apache.org/download.cgi}{这里}下载apr。
+
+在Linux下静态链接log4cxx，编译通过的命令如下：
+\begin{lstlisting}
+$ g++ test.cpp liblog4cxx.a libapr-1.a libaprutil-1.a libapriconv-1.a libexpat.a -lpthread
+\end{lstlisting}
+编译后的执行文件约11MB。可见灰常复杂。而且，最惊讶是，以上编译通过竟然是瞎猫碰见了死耗子，
+因为改变这几个静态库的顺序，就编译出错了。
+
+除了以上库，还需要编译expat库，apr-util-1.3.4/xml/expat里有这个库。
+
+\section{Use log4cxx}
+log4cxx的三个重要概念是：Logger, Appender, Layout。
+\begin{itemize}
+\item Logger表示日志的层次结构。
+\item Appender表示信息如何附加，如附加到文件或标准输出。
+当日志有特殊要求，例如日志文档的大小限制，每日定时备份日志，定时将日志通过网络发送等，
+就需要对Appender进行设置。
+\item Layout表示日志输出的格式布局，如时间格式等。
+\end{itemize}
+
+在log4cxx的配置文件，或者程序源代码中，都可以设置以上的参数。
+log4cxx的配置文件有几种格式，如XML和Java格式的配置文档。
+而log4cxx的编程，也有许多细节需要注意。
+
+\section{log4cxx xml configure}
+至今还没有找到官方的关于log4cxx xml介绍的文章。目前的配置都是东摘西抄的:)
+以下是一个简单的配置文件：
+
+\noindent\begin{lstlisting}[language=XML, basewidth={0.45em, 0.25em}, fontadjust]
+<?xml version="1.0" encoding="UTF-8" ?>
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="testlog4cxx" class="org.apache.log4j.FileAppender">
+        <param name="File" value="/home/bailing/fget/fget.log" />
+        <param name="Append" value="true" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} (%F:%L) - %m%n"/>
+        </layout>
+    </appender>
+    <root>
+        <priority value="trace" />
+        <appender-ref ref="testlog4cxx" />
+    </root>
+</log4j:configuration>
+\end{lstlisting}
+
+以上可见appender是配置文件的主体。其中指定了输出为文件，并且为附加方式。
+在appender中有layout的设置，通常layout只有输出格式的设置。
+root即是Logger，设置了日志的级别为trace，即跟踪方式，并将root的appender指定到上面的设置。
+
+appender的class有多种，常用的有：
+
+\begin{tabular}{|l|l|}
+\hline
+appender class                          & 说明 \\\hline
+org.apache.log4j.FileAppender           & 文件方式输出。    \\\hline
+org.apache.log4j.ConsoleAppender        & 终端输出。        \\\hline
+org.apache.log4j.RollingFileAppender    & 每日备份日志。    \\
+                                        & 设置文件大小，备份日志。  \\\hline
+org.apache.log4j.net.SMTPAppender       & 邮件发送日志。    \\\hline
+org.apache.log4j.odbc.ODBCAppender      & 将日志存入数据库。    \\\hline
+org.apache.log4j.net.XMLSocketAppender  & 用XMLSocketAppender发送，用XMLSocketReceiver接收。 \\\hline
+\end{tabular}
+
+通常只用到输出文件和标准输出。
+
+\section{log4cxx Programming}
+一个最简单的log4cxx程序：
+\begin{lstlisting}[language=C++]
+#include <iostream>
+#include <log4cxx/logger.h>
+#include <log4cxx/xml/domconfigurator.h>
+
+int main()
+{
+    setlocale(LC_ALL, "");
+    log4cxx::xml::DOMConfigurator::configure("conf.xml");
+    log4cxx::LoggerPtr logger = log4cxx::Logger::getRootLogger();
+    LOG4CXX_DEBUG(logger, "hello, world");
+    return 0;
+}
+\end{lstlisting}
+
+编译需要动态链接log4cxx库，如：
+\begin{lstlisting}
+$ g++ main.cpp -L /usr/local/lib -llog4cxx
+\end{lstlisting}
+
+log4cxx预定义了几个宏，用于不同级别的日志输出：
+
+\begin{lstlisting}[language=C++]
+LOG4CXX_TRACE(log4cxx::LoggerPtr, msg);
+LOG4CXX_DEBUG(log4cxx::LoggerPtr, msg);
+LOG4CXX_INFO(log4cxx::LoggerPtr, msg);
+LOG4CXX_ERROR(log4cxx::LoggerPtr, msg);
+LOG4CXX_FATAL(log4cxx::LoggerPtr, msg);
+\end{lstlisting}
+
+其中msg可以视作stringstream，如下一般使用：
+\begin{lstlisting}[language=C++]
+LOG4CXX_ERROR(logger, "error : " << errno << strerror(errno));
+\end{lstlisting}
+

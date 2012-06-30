@@ -1,0 +1,43 @@
+% berlin, 2009/02/03
+
+\documentclass{article}
+\usepackage{color}
+\usepackage{xcolor}
+\begin{document}
+
+\color{green}{abc}
+\color{red}{abc}
+\color{blue}{abc}
+\color{black}{}     % color会影响整个文档的颜色
+
+\colorbox{green}{
+    text in colorbox
+}
+\colorbox{red}{
+    text in colorbox
+}
+\colorbox{blue}{
+    text in colorbox
+}
+
+\colorbox{green}{
+    \fbox{text in colorbox/fbox}
+}
+
+\newcommand{\codecomment}[1]{
+    \color{green}{#1}
+    \color{black}{}
+}
+
+%#\colorbox{grey}{
+%#    ok
+%#}
+
+using namespace std;    \codecomment{//comment here}
+
+end of color test.
+
+\textcolor{blue!70}{hehe}
+hehe again, \textcolor{red}{ddd}
+
+\end{document}

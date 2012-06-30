@@ -1,0 +1,88 @@
+\chapter{Vim}
+\index{Vim}
+\noindent\href{http://vimcdoc.sourceforge.net/}{vimcdoc}，是一个Vim帮助的中文文档。
+\noindent\href{http://easwy.com/blog/}{Easwy's Blog}，许多的Vim技巧与插件介绍。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tricks
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Tricks}
+\blscmd{:r !date} 在当前行插入时间。
+
+\blscmd{:vimgrep /pattern/[j][g] files}
+在多个文件搜索。j将搜索结果输出到quickfix窗口。用\blscmd{:clist}, \blscmd{:cnext}，\blscmd{:cprevious}查看。
+如果files是一个正则表达式匹配某种类型的文件，使用如\blscmd{**/*.cpp}将匹配当前目录下的所有cpp文件，且是递归搜索。
+
+\blscmd{:gegisters}查看所有的寄存器内容。所有vim寄存器以\blscmd{"}开头，如\blscmd{"x}。
+常用者如选中文本，\blscmd{"x x}剪切，切换文件，再执行\blscmd{"x p}即可。
+
+要Linux用\blscmd{Shift-K}可以查看man手册，但如果如printf，shift-K就将你带到了man(1) printf，不是你想要的C printf。
+可以在Vim使用命令\blscmd{3 shift-K}即可。
+
+转当前文件为HTML页面：\blscmd{:TOhtml}。
+
+捕获Shell命令输出，定向到新Buffer：\blscmd{:split +enew \textbar r !ls}。
+以上\textbar不是管道操作，而是命令分隔符。\blscmd{split \{+cmd\}}表示打开一个新窗口，
+并在窗口中执行\blscmd{\{cmd\}}这个命令。:h中解释\blscmd{+\{cmd\}}是说打开一个窗口并执行cmd命令。
+
+打开DOS格式的文本，通常可见行尾的\^{}M控制字符，实则为$\backslash$r。
+可以用命令\blscmd{:\%s/$\backslash$r//g}清除之。
+
+\blscmd{:cs reset}重置所有的cscope文件。
+\blscmd{:se ignorecase}和\blscmd{:se noignorecase}搜索时大小写敏感设置。
+\blscmd{:ls}和\blscmd{:buffers}查看缓冲区列表。
+\blscmd{gv}选中上次用visual模式选择的文本块。
+
+\blscmd{:argdo \%s/a/b/ge $|$ update}对多个文件执行替换。\blscmd{e}避免找不到匹配时输出错误信息。
+与\blscmd{argdo}类似的命令有\blscmd{windo}，\blscmd{bufdo}。不过执行bufdo需要小心，最好先用\blscmd{:ls}
+或\blscmd{:buffers}查看缓冲区列表o
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tricks
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Plugin}
+\index{Vim!Plugin}
+
+\subsection{Mini Plugin}host-to-host
+\blitem{matrix.vim}{黑客帝国屏幕。命令:Matrix启动。如果打开标签，则:Matrix会报错说不能打开窗口。}
+\blitem{ColorSchemeMenuMaker.vim}{用于快速浏览色彩机制，用命令:ColorSchemeExplorer启动。}
+
+\blitem{mark.vim}{多种色彩，同时高亮多个word。默认命令$\backslash$m即可高亮，或取消高亮；
+    $\backslash$r手工输入正则表达式，然后高亮匹配；$\backslash$n清楚光标所在高亮或所有高亮。
+    高亮非常方便，不过在高亮间跳转十分麻烦。\href{http://www.vim.org/scripts/script.php?script_id=1238}{这里}
+    有具体的说明。
+}
+
+\subsection{A}
+\index{Vim!Plugin!A}
+A插件的作用是在头文件和源文件间跳转。
+在Vim中使用:A命令即可。文件的关联方式和搜索路径都可以在\~{}/.vimrc中设置。
+设置文件关联方式：
+\bllcmd{let g:alternateExtension\_CPP = "inc,h,H,HPP,hpp"}
+设置搜索路径：
+\bllcmd{let g:alternateSearchPath = "sfr:../include,sfr:../src"}
+搜索路径的设置很重要，sfr:后跟的是相对“当前文件”的搜索路径。
+如存在：./src/utility.cpp和./include/utility.h，则在编辑utility.h时使用:A，
+想要跳转到./src/utility.cpp，则搜索路径是：../src/。
+
+\section{Tricks}
+\subsection{Search and Replace}
+将一串数字，如：1234567890，替换为另一串数字，如：
+0x12, 0x34, 0x56, 0x78, 0x90, 
+使用命令：
+\begin{lstlisting}
+:s/\(\d\{2}\)/0x\1, /g
+\end{lstlisting}
+
+在选定行的每一行后面加一个反斜杠。
+如在C/C++定义宏时可用：
+\begin{lstlisting}
+:s/$/\\/g
+\end{lstlisting}
+消除每行后的反斜杠则是：
+\begin{lstlisting}
+:s/\\$//g
+\end{lstlisting}
+
+\section{Vim Script} \label{language-vim-script}

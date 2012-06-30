@@ -1,0 +1,104 @@
+\usepackage{CJK}                % 使用中文
+\usepackage{makeidx}            % 生成索引
+\usepackage{verbatim}           % 引入ASCII文本
+\usepackage{indentfirst}        % 使段首也缩进
+\usepackage[pdftex]{color,graphicx}     % 在文档中插入图形
+
+\usepackage{tabularx}
+
+\usepackage{listings}   % 引用程序
+\usepackage{xcolor}     % 程序加以色彩
+
+\usepackage{colortbl}   % color table, supoort \rowcolor , etc.
+
+\usepackage{fancyvrb}   % fancy verbatim
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% 以下是王垠提供的中文bookmark方案
+% http://docs.huihoo.com/homepage/shredderyin/tex_frame.html
+% 可以在目录中正常显示中文，但Acrobat左侧书签是乱码
+% 欲使书签也能正常显示中文，用gbk2uni工具转换
+\usepackage[pdftex,CJKbookmarks]{hyperref}   % 在PDF文档中使用超链接，下面有关于超链接的详细设置
+%\pdfstringdefDisableCommands{
+%\let\CJK@XX\relax
+%\let\CJK@XXX\relax
+%\let\CJK@XXXp\relax
+%\let\CJK@XXXX\relax
+%\let\CJK@XXXXp\relax
+%}
+
+%\usepackage[CJKbookmarks]{hyperref}
+
+%\AtBeginDvi{\special{pdf:tounicode UTF8-UCS2}}
+
+% ------------------------------------------------------------------------------
+
+%\hypersetup{bookmarks=true,unicode=true,pdffitwindow=false,colorlinks,urlcolor=cyan,linkcolor=blue}
+\hypersetup{bookmarks=true,unicode=true,pdffitwindow=false,colorlinks,urlcolor=blue,linkcolor=blue}
+
+% ------------------------------------------------------------------------------
+
+\lstset{
+    %numbers=left,
+    %numberstyle=\tiny,
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside='',
+    xleftmargin=0em,
+    xrightmargin=0em,
+    aboveskip=0.5em,
+    %frame=single
+    frame=lines,
+    %emph={boost,vector,list,bitset,const\_iterator,find\_if, bind},emphstyle=\color{blue},
+    %emph={[2]\_1},emphstyle={[2]\color{red}}
+}
+
+\renewcommand{\baselinestretch}{1.1}    % 设置行间距，设置为默认行间距的1.5倍
+
+%================================================================================ 
+% New Command
+%================================================================================ 
+
+\newcommand{\cppheader}[1]{\textless#1\textgreater}
+\newcommand{\blkai}[1]{\CJKfamily{kai}#1} % 楷体
+%\newcommand{\blscmd}[1]{\textcolor{blue!70}{\,#1\,}}    % short command
+\newcommand{\blscmd}[1]{\emph{\bfseries{\,#1\,}}}    % short command
+\newcommand{\blcomment}[1]{\blkai{\textcolor{blue!50}{#1}}\CJKfamily{song}}              % berlin's comment
+\newcommand{\blcopy}[1]{\blkai{\textcolor{red!50!green!50!blue!50}{#1}}\CJKfamily{song}}              % berlin's copy
+\newcommand{\bllinespace}{\par\addvspace{1ex plus 0.8ex minus 0.2ex}}
+
+\newcommand{\bldate}[1]{\emph{\date{#1}}}
+
+% item list, e.g.:
+% -d/--debug
+%     Print debug mode.
+%     For development only.
+\newcommand{\blitem}[2]{%
+    \par\addvspace{1.5ex plus 0.8ex minus 0.2ex}%
+    \noindent\textbf{#1}\hfill\\%
+    %\par\addvspace{0.5ex plus 0.1ex minus 0.1ex}%
+    \hphantom{MM}\parbox{\textwidth}{#2}%
+    \par\addvspace{1.5ex plus 0.8ex minus 0.2ex}%
+}
+
+% long command
+\newcommand{\bllcmd}[1]{%
+    \par\addvspace{1.0ex plus 0.2ex minus 0.2ex}%
+    \begin{tabular*}{\textwidth}{l@{\extracolsep\fill}}%
+    \rowcolor{gray!20}%
+    #1%
+    \end{tabular*}%
+    \par\addvspace{1.0ex plus 0.2ex minus 0.2ex}%
+}
+
+\newenvironment{blcommand}%
+    {\nopagebreak\par\small\addvspace{3.2ex plus 0.8ex minus 0.2ex}%
+     \vskip -\parskip
+     \noindent%
+     \begin{tabular}{|l|}\hline\rule{0pt}{1em}\ignorespaces}%
+    {\\\hline\end{tabular}\par\nopagebreak\addvspace{3.2ex plus 0.8ex
+        minus 0.2ex}%
+     \vskip -\parskip}

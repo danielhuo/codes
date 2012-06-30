@@ -1,0 +1,31 @@
+\part{Protocol Notes}
+\noindent\href{http://linux-ip.net/html/}{Guide to IP Layer Network Administration with Linux}介绍了许多Linux下的网络知识，
+包括常用的网络软件等。
+
+POP3(fecting mail), SMTP(sending mail), IRC(chat), LDAP(directory access).
+
+\section{NAT}
+NAT类型：
+\begin{enumerate}
+\item \blscmd{Full cone NAT}，内部地址(iAddr:port1)映射为外部地址(eAddr:port2)。
+任意从(iAddr:port1)发出的报文都将转为(eAddr:port2)，
+任意从(eAddr:port2)接收的报文都将送到(iAddr:port1)。
+\item \blscmd{(Address) Restricted cone NAT}，只有当(iAddr:port1)发送报文给(hostAddr:any)，
+(hostAddr:any)才可发送报文给(iAddr:port1)。此种NAT是地址限制，但port不限制之NAT。
+\item \blscmd{Port-Restricted cone NAT}，(iAddr:port1)通过(eAddr:port2)发送报文给(hostAddr:port3)，
+只有(hostAddr:port3)才可发送报文给(iAddr:port1)。
+\item \blscmd{Symmetric NAT}，每个从内网地址发出的报文到达不同的外网地址，都将映射出一道唯一的通往外网的通路。
+\end{enumerate}
+以上后三种类型的NAT，都一定要(iAddr:port1)首先发送报文，才可做NAT。
+
+\section{BT}
+\noindent\href{http://en.wikipedia.org/wiki/Comparison\_of\_BitTorrent\_software}{wiki上的BT软件列表} 这个列表
+比较全面的列出了各个平台下的BT软件，并做了非常详细的对比，如支持的BT特性，使用的编程语言，以及BT库等。
+\noindent\href{http://en.wikipedia.org/wiki/Libtorrent\_(Rasterbar)}{wiki上的libtorrent(Rasterbar)介绍} 这个BT库
+又叫rb-libtorrent，用了Boost.Asio，以此获得跨平台性。
+
+\subsection{libtorrent Notes}
+libtorrents是一个用C++写的BT库，其中用了Boost，获取跨平台性。
+Arctic Torrent就使用了该库，而Arctic Torrent的目标是使用尽量少的内存和CPU。
+
+libtorrents中，一个piece拥有多个blocks。

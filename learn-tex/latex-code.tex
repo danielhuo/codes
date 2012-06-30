@@ -1,0 +1,103 @@
+\documentclass{article}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{CJK}
+
+\begin{document}
+\begin{CJK*}{GBK}{song}
+
+\lstset{
+    language={[ANSI]C++},
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside='',
+    xleftmargin=2em,
+    xrightmargin=2em,
+    aboveskip=1em,
+    showstringspaces=false,
+    emph={boost},emphstyle=\color{red},
+    emph={[2]vector,list,for\_each,iterator,const\_iterator},emphstyle={[2]\color{blue}}
+}
+
+\begin{lstlisting}[frame=lines,caption=sync highlight test]
+#include <iostream>
+#include <boost/filesystem.hpp>
+using namespace std;
+using namespace boost::lambda;
+int main()
+{
+    std::vector<int> vi;
+    std::vector<int>::const_iterator iter = vi.begin();
+    for_each(vi.begin(), vi.end(), oper);
+    return 0;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[backgroundcolor=\color{red!50!green!50!blue!50},frame=single,framerule=0pt]
+write(fd, buf, buflen);
+\end{lstlisting}
+
+before
+\begin{lstlisting}[
+    language={[ANSI]C},
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+    showspaces=false,
+    showtabs=false,
+    escapeinside='']
+int main(int argc, char* argv[])
+{
+    /* '中文注释' */
+    printf("hello, !\n");
+}
+\end{lstlisting}
+end
+
+before before before before before before before before before
+before before before before before before before before beforebefore before before before before before before before before
+before before before before before before before before before
+\begin{lstlisting}[
+    language={[ANSI]C},
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside='',
+    xleftmargin=2em,
+    xrightmargin=2em,
+    aboveskip=1em]
+int main(int argc, char* argv[])
+{
+    /* comment */
+    printf("hello, '中国'!\n");
+}
+\end{lstlisting}
+endendendendendendendendendendendendendendendendendendendendendende
+ndendendendendendendendendendendendendendendendendendendendendendende
+ndendendendendend
+
+\begin{verbatim}
+\begin{lstlisting}[
+    language=TEX,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside='',
+    xleftmargin=2em,
+    xrightmargin=2em,
+    aboveskip=1em]
+\end{lstlisting}
+\end{verbatim}
+
+\end{CJK*}
+\end{document}

@@ -1,0 +1,844 @@
+\part{UNIX Tools}
+
+UNIX Tools主要记录以下一些类别的UNIX工具：
+\begin{itemize}
+\item 常用工具。各种各样的常用工具，以及一些使用技巧。
+\item 编译系统的主要工具。包括gcc, gdb, make。另有GNU出品的coreutil，包括strip等。
+\item 编译系统的其他工具。如valgrind, gprof, objdump、nm等。
+\item 网络工具。如traceroute, tcpdump, wget, curl，iptables等。
+\item 其他工具。如perforce/p4源码管理客户端等。
+\end{itemize}
+
+UNIX变种的各种平台都大量使用GNU软件，\href{http://www.gnu.org/manual/manual.html}{这里}是GNU
+软件的在线手册列表，包括gcc, gdb, libc, stdc++等。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% UNIX environment tools
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{UNIX Enivronment Tools}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #environment basic
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Basic}
+\blscmd{adduser}添加用户，如：\blscmd{useradd bailing}。
+\blscmd{passwd}为用户设置密码，如：\blscmd{passwd bailing}。
+\blscmd{userdel}删除用户，如\blscmd{userdel bailing}。
+
+修改\blscmd{/etc/sudoers}文件，为一般用户赋予需要root执行权限的命令，添加如下一行：
+\bllcmd{bailing ALL=/usr/bin/p4}
+这样一般用户bailing就具备了执行p4命令的权限，使用\blscmd{sudo p4}即可。
+注意即使root用户也不能修改/etc/sudoers文件，使用命令\blscmd{visodu}即可。
+如果要完全开放一个命令的执行权限，可以用\blscmd{chmod a+x}即可。
+
+\blscmd{sudo}的操作会被日志记录。
+
+\blscmd{wc}用于统计文件的行数，字符串个数等。
+\blscmd{wc -l}表示输出行数。
+
+\blscmd{sort}用于将文件每一行进行排序，默认按字典序排序。
+\blscmd{sort -n}表示按数值排序。
+\blscmd{wc f1 f2 f3 -l \textbar sort -n}按行数对f\{1-3\}文件排序。
+
+\bllcmd{\$ netstat --tcp -n \textbar grep ``6699.*ES'' \textbar sort -r -n -k 3 \textbar less}
+对netstat输出的第三列排序，从大到小。\blscmd{-k}指定目标排序域。
+
+\blscmd{dd}命令可用于转储文件，man手册解释：convert and copy a file.
+常用的切割文件的需求可用dd完成。如：
+\bllcmd{dd if=fin of=fout skip=500 ibs=1 count=500}
+以上\blscmd{ibs}指定了输入文件的切割单位是字节，\blscmd{count}指定了长度，以ibs为单位。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #environment tricks
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Tricks}
+
+
+
+使用Debian时，\blscmd{apt-get install ssh}后，发现用SecureCRT，以ssh连接debian，只要一段时间空闲，
+就会被自动断开。因此需要设置：\blscmd{/etc/ssh/sshd\_config}文件，把\blscmd{LoginGraceTime}选项注释掉即可。
+
+\blscmd{info core.util}查看系统所有的核心命令。
+
+\blscmd{date}命令设置时间，可以用\blscmd{-d}查看字符串对应的时间是否正确，再用\blscmd{--set}设置时间。
+\bllcmd{\$ date -d ``03/18/07 15:04''}, 输出\bllcmd{ 2009年 03月 18日 星期三 15:04:00 CST }
+
+\blscmd{tee}read from standard input and write to standard output and files.
+\blscmd{tcpdump}的手册中介绍的一个应用：
+\bllcmd{tcpdump -l \textbar tee dat}
+将\blscmd{tcpdump}输出行缓冲，并输出到stdout和dat文件。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #xargs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\blscmd{xargs}build and execute command lines from standard input.
+man xargs上的例子很值得学习。如：
+\bllcmd{find /tmp -name core -type f -print \textbar xargs /bin/rm -f }
+这个命令可能出现的错误是，如果文件名包含换号符(newlines)或空格(spaces)，则会出错。因为\blscmd{xargs}以空格或换号作为分隔符。
+\bllcmd{find /tmp -name core -type f -print0 \textbar xargs -0 /bin/rm -f }
+这个命令则修复了上一个命令的错误。
+\bllcmd{find /tmp -depth -name core -type f -delete}
+与上一个命令效果相同，但效率更高，因为没有fork和exec的开销，也不用xargs的调用。
+\bllcmd{cut -d: -f1 < /etc/passwd \textbar sort \textbar xargs echo}
+产生一个紧凑的输出。如果没有xargs echo，则每个名字跟一个换行。
+
+Bash的快捷操作：\\
+\begin{tabular}{ll}
+Ctrl-r  & 历史搜索模式。\\
+Ctrl-a  & 将光标定位到命令开头。\\
+Ctrl-e  & 将光标定位到命令结束。\\
+Ctrl-u  & 剪切光标之前的内容。\\
+Ctrl-k  & 剪切光标之后的内容。\\
+Ctrl-y  & 粘贴由Ctrl-u/k剪切的内容。\\
+Ctrl-t  & 交换光标之前两个字符的顺序，并将光标后移一位。\\
+Ctrl-w  & 删除光标左边的一个word。\\
+Ctrl-l  & 清屏。\\
+\end{tabular}
+
+在bash比较字符串的两个方法。用if语句：
+\bllcmd{\$ if [ 1 = 3 ]; then echo ok; fi}
+另一种方法是：
+\bllcmd{\$ [ 1 = 3 ];ret=\$?;echo \$ret}
+
+数学表达式：\blscmd{echo \$((1+3))}。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #ps, #top, #fuser, #lsof
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Process Monitor}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #ps
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ps}
+\blscmd{ps -C fget -o pid=}输出进程fget的pid。可用在如top查看指定进程的运行时状态，
+或用gdb挂载运行时进程：\blscmd{gdb fget `ps -C fget -o pid=`}。
+以上命令更简单的模式是：\blscmd{gdb fget `pgrep fget`}。
+如果有\blscmd{pidof}命令，则更为简单，\blscmd{gdb fget `pidof fget`}。
+
+\blscmd{ps aux}输出进程的详细信息，其中进程状态一列的格式如下：\\
+\begin{tabular}{ll} \hline
+R   & Runing or runable(on run queue)\\
+S   & Interruptible sleep(waiting for an event to complete) \\
+Z   & defunct(zombie) process, terminated but not reaped by its parent \\\hline
+<   & high-priority\\
+N   & low-priority\\
+L   & has pages locked into memory\\
+s   & is a session leader\\
+l   & is multi-threaded\\
++   & is in the foreground process group\\
+\end{tabular}
+
+查看mediaserver的进程状态输出是：\blscmd{SLl}，则表明该进程在sleep，执行了锁页调用，
+且是一个多线程进程。
+
+\blscmd{-L} 显示线程信息，包括NLWP(number of thread)和LWP(Thread ID)。
+\blscmd{-f} full-format listing。
+\blscmd{-p PID} 输出PID进程的信息。
+\blscmd{--no-headers} 不输出说明行。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #fuser
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{fuser}
+\blscmd{fusr}查看使用某个文件/路径的所有进程。
+\blscmd{-k}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #find, #grep
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{find and grep}
+find是在目录中搜索文件。
+grep是在文件中搜索字符串。
+grep的名字源自ed行编辑器中的“全局正则表达式打印”\blscmd{g/re/p},
+这个命令中的g表示在全局范围，/re/表示查找对象（正则表达式），p表示打印。
+
+\blscmd{pgrep}和\blscmd{pkill}，man手册中这两个工具是并列的，因此也一并记录。
+\blscmd{pgrep}用来查找程序对于的PID，如\blscmd{pgrep fget}，查找fget的PID。
+\blscmd{pkill}向匹配的程序发送默认的SIGTERM信号。
+\bllcmd{pgrep -u root sshd}列出所有属于root的sshd进程(AND)。
+\bllcmd{pgrep -u root,daemon}列出所有属于root的进程，或deamon进程(OR)。
+
+\verb|find ./ -name "*.h"  -exec grep setsock "{}" \;|
+
+\blscmd{pgrep fget}则会搜索并输出fget的pid。
+\blscmd{top -p `pgrep fget`}则可单只查看fget的信息。
+
+``逻辑与"与``逻辑或"的grep表达式
+\bllcmd{cat f \textbar grep ``word1 $\backslash$\textbar word2''}
+\bllcmd{cat f \textbar grep ``word1.*word2''}
+
+grep命令行参数：\\
+\begin{tabular}{ll}
+-i          & 不区分大小写\\
+-v          & 反向搜索，不显示匹配项\\
+-c          & 打印匹配行数，不显示具体的匹配内容\\
+-I          & 不搜索二进制文件\\
+\end{tabular}
+
+\bllcmd{\$ netstat --tcp -n \textbar grep 6699 \textbar grep ES -c}
+
+\blscmd{-I}不搜索二进制文件，同等\blscmd{--binary-files=without-match}。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% bc, dc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{bc and dc}
+任意进制间的转换：
+\bllcmd{ \$ echo 'ibase=10;obase=2;207' \textbar bc }
+输出\blscmd{11001111}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #gcc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{GCC}
+\noindent\href{http://gcc.gnu.org/onlinedocs/}{GCC online documentation}GCC所有版本的手册列表。
+\noindent\href{http://www.gnu.org/software/hello/manual/libc/}{GNU C Library Manual}其中有关于GNU C库
+的细节说明。并且给出了一些编程技巧，如malloc hook，debug traceback(), 锁页mlock()等的说明。其中还有一些关于GNU
+平台上特殊的函数等介绍。
+
+\section{Compile Parameter}
+
+
+\paragraph{-g}
+生成调试信息。-glevel指定调试级别，默认为-g2。-g0表示没有任何调试信息，即-g0是-g取反(negates)。
+-g3附加更多的调试信息，如宏定义/展开等。查看宏用\blscmd{p macroname}，查看宏的展开形式用：
+\blscmd{macro expand macroname}。需要查看宏时，还可加gcc选项-gdwarf-2。
+    
+\blscmd{man gcc}上说-g参数会为GDB生成专用调试信息，
+这些调试信息会让GDB更好工作，但如果使用其他调试器，则可能因此而崩溃。
+所以可以使用其他命令生成指定的调试信息，如\blscmd{-gstabs+}，\blscmd{-gstabs}，
+\blscmd{-gxcoff}，\blscmd{-gvms}等。
+
+\paragraph{-D}
+在命令行提供宏定义，如：
+\bllcmd{g++ -DVERSION="\"fget 0.1.0\"" -DBUILD\_HOST=\"`uname -r`\" test.cpp}
+需要注意引号的使用。双引号防止shell将参数里的空格作为命令行分隔符；
+斜杠双引号，即双引号之间的内容，表示宏的值，包括双引号本身，
+使用斜杠是防止shell解释引号。
+
+\blitem{-fbounds-checking}{在代码中插入数组边界检查。man gcc说目前只对Java和Fortran管用。}
+\blitem{-fstack-protector/-fstack-protector-all}{检查栈上数据。参考\ref{cpp-buffer-overflow-protection}的说明。}
+
+\blitem{-static}{静态链接。man gcc的解释是：prevents linking with the shared libraries.
+如：\blscmd{g++ -static hello.cpp}生成的a.out文件约1.3M，而不加此参数生成文件约6K。
+也不能用\blscmd{ldd}查看a.out文件了，因为不是动态可执行文件。
+}
+
+\blitem{-fno-builtin/-fno-builtin-function}{不识别那些不以\_\_builtin\_作为前缀的内建函数。
+GCC通常会为内建函数生成更有效率的代码，例如\blscmd{alloca}(在栈上分配空间)会成为一条指令，
+而\blscmd{memcpy}则可能成为inline copy loops。这样做的结果就是生成代码更小更快，但这些函数
+也许就不再存在，你不能设置断点或通过链接外部库来修改它们的行为。在使用\cppheader{math.h}
+中的某些函数时，就可能遇见这些内建函数。
+}
+
+g++可以通过\blscmd{-fabi-version}控制ABI版本。另一些具体细节的控制，如\blscmd{-fpack-struct}，
+\blscmd{-fno-exception}等。
+
+\blscmd{gcc --help=warning}查看关于warning的说明。
+
+\section{GCC Assemble} \label{language-gcc-assemble}
+\%ebp: frame pointer, 一般在所有函数调用第一行都是\blscmd{push \%ebp}。
+
+\%eax: 用于存储函数返回值。GDB调试时查看函数返回值用命令\blscmd{p \$rax}。
+
+\section{Ccache}
+gcc编译时，用\blscmd{ccache}，在编译时生成cache，以加速再次编译C/C++程序的速度，不过生成的文件也是颇大。
+CCACHE\_DIR的默认值是\blscmd{\$HOME/.ccache}。可以直接删除此目录，也可通过\blscmd{ccache -C}删除编译缓存。
+\blscmd{-F max-file-size}和\blscmd{-M maxsize}设置最大缓存文件大小，和缓存最大占用空间。
+\blscmd{-s}查看缓存统计信息，包括命中次数，cache大小等。
+
+除以上命令，还有许多环境变量控制ccache。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #gdb 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Debuging with GDB}
+\section{Thinking in Debug}
+常用的调试技巧有：
+
+\paragraph{使用日志系统}
+日志需要可以分级控制，可以用某种简单的开关控制，如C/C++的日志宏。
+当出现系统级错误时，需要检查系统日志，如\blscmd{/var/log/*}, \blscmd{dmesg}等。
+
+\paragraph{调试内核}
+调试内核用的\blscmd{kgdb}, \blscmd{kdb}。
+以及其他一些专用的调试器，如称为全能调试器的\blscmd{ODB}等。
+\blscmd{kgdb}调试Linux内核需要两台计算机。\blscmd{kdb}调试内核只需一台计算机。
+难以用普通调试器调试内核，是因为内核非以普通进程存在等。
+
+\paragraph{使用断言}
+使用适合项目的自定义ASSERT断言。可以通过-DNDEBUG编译选项关闭assert()宏。
+
+\paragraph{使用调试器}
+如\blscmd{GDB}。
+
+\paragraph{跟踪系统调用}
+使用\blscmd{strace}和\blscmd{ltrace}跟踪系统调用和库调用。
+
+\paragraph{其他手段}
+\blscmd{/proc/modules}中存储有当前所有被加载的系统模块。调试系统内核用\blscmd{printk}函数。
+
+C/C++程序与内存相关的调试时最耗时的调试，有许多工具和方法可以帮助调试：
+
+运行时用\blscmd{\$MALLOC\_CHECK\_=2 prog}可以检查内存。
+
+\blscmd{efence}库可以检查两类内存问题：访问malloc()分配空间之外的内存；
+访问已被free()的内存。只需在编译时静态或动态链接efence库即可。
+
+\section{GDB Introduction}
+\noindent\href{http://www.yolinux.com/TUTORIALS/GDB-Commands.html}{调试STL的GDB脚本}
+用此脚本可以直接打印STL容器的内容。\href{http://www.stanford.edu/~afn/gdb\_stl\_utils/}{这里}
+也有一个脚本可供打印STL。
+
+在GDB中运行GDB脚本：source ~/.gdbinit
+
+GDB对C++的支持不好(也许要追溯到GCC对C++的支持就不好)，因此调试时不得以采用许多Tricks。
+比如查看STL容器等，通常GDB会打印出令人费解的调试信息，通常你需要人工过滤掉你不需要的输出。
+当然有热心人提供了GDB脚本来支持C++调试，但毕竟不是官方支持，而且这些脚本通常又是针对某一个特定的GDB版本。
+GDB的一种Trick是在程序内部编写调试函数，并在GDB中用call func(parameters)的技巧。
+
+GDB对回退调试(即返回到已经运行过的地方，rewind)的支持并不理想，是以bookmark方式实现。
+回退调试也被称作反向调试，曾有GDB Path支持(record)。
+
+在GDB中设置变量值，如\blscmd{p \$p=(Peer*) 0x86d9068}，则可以像使用程序变量一样使用在GDB中定义的变量，如：
+\blscmd{p \$p-\textgreater str()}。
+
+\blscmd{sharedlibrary}加载系统动态库的符号文件。
+\blscmd{show auto-solib-add}查看动态库是否自动加载。
+
+GDB会捕获信号，如在socket编程常见的SIGPIPE。用命令\blscmd{handle SIGPIPE}
+查看GDB对此信号的处理方式，用\blscmd{handle SIGPIPE nostop}修改处理方式，使之不中断程序。
+对非错误信号，如SIGALRM, SIGWINCH, SIGCHILD，GDB默认执行nostop, noprint, pass操作，
+对错误信号，GDB默认执行stop, print, pass操作。
+
+\section{Debug Core Dump}
+如果出现不可恢复的错误，OS将为程序生成core dump。
+GDB调试core dump的命令是\blscmd{gdb prog core.PID}。
+进入GDB调试后，通常用命令\blscmd{bt}或\blscmd{where}查看程序奔溃时的堆栈情况。
+不过如果程序奔溃时堆栈也被破坏掉了(如越界写操作，可能将保存堆栈信息的内存破坏)，
+那么用bt或where命令就不能准确的定位问题，而GDB的输出可能是???等不可读信息。
+
+如果程序奔溃时没有生成core.PID文件，则可能是系统限制，
+检查\blscmd{ulimit -c}的值，如果输出为0，则表示当前shell禁止生成core文件。
+可以修改其值，如\blscmd{ulimit -c 1024}，表示可以生成core文件，
+且将其大小限制为1024 bytes。
+
+\section{Examining the Program}
+\subsection{Examining the Stack}
+使用\blscmd{bt}，\blscmd{where}命令查看堆栈。
+使用\blscmd{frame}查看调用帧。检查bt输出的调用栈，如果想用print命令打印函数参数却失败，
+可以尝试用\blscmd{up}和\blscmd{down}移动堆栈，从而查看函数参数。
+
+\subsection{Breakpoint}
+\blscmd{display}自动显示断点处的数据，\blscmd{undisplay}取消显示。
+\blscmd{jump}可以往回跳转，但不是起到rewind的作用，要回退调试，需要bookmark。
+
+\blscmd{tbreak}可以用在直接跳转到指定行的场合，例如快速跳过while/for循环。
+跳过循环体的标准做法可能是\blscmd{until}或\blscmd{u}，GDB help的解释是：
+Execute until the program reaches a source line greater than the current,
+or a specified location within the current frame.
+
+\blscmd{stepi}和\blscmd{nexti}是单步跟踪一条机器指令。
+
+\section{Debug with Remote Target}
+要远程调试程序，需在远程机上运行gdbserver，如：\bllcmd{gdbserver host:2345 --attach 27523}
+注意，gdbserver参数的顺序，在某些系统上，与\blscmd{Debugging with GDB}手册的描述有所不同。
+
+在本机上启动gdb，之后用\blscmd{file}命令加载符号文件，即本地编译的可执行文件；
+再用\blscmd{target}命令连接目标机：\bllcmd{target remote tcp:192.168.16.105:2345}
+之后可以像调试本机文件一样调试远程文件。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% make
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{make}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% binutils
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{binutils}
+\blscmd{binutils}是对多种目标文件的操作工具集。
+binutil主要包括以下工具：
+
+\begin{tabular}{|l|l|}\hline
+as          & 汇编器\\\hline
+ld          & 链接器\\\hline
+gprof       & 性能分析profiler \\\hline
+addr2line   & 映射地址到代码行/文件 \\\hline
+ar          & create, modify, and extract from archives\\\hline
+nm          & list symbols in object files\\\hline
+objcopy     & copy object files, possibly making changes\\\hline
+objdump     & dump information about object files\\\hline
+readelf     & display content of ELF files\\\hline
+size        & list total and section sizes\\\hline
+strings     & list printable strings\\\hline
+strip       & remove symbols from an object file\\\hline
+\end{tabular}
+
+\blscmd{addr2line}映射地址到代码行/文件。
+\bllcmd{\$ addr2line -e ./fget -s 08086890}
+输出\blscmd{main.cpp:10}。
+其中addr2line默认文件名为a.out，可用\blscmd{-e}指定输入文件。
+\blscmd{-s}是不输出路径名。
+
+\blscmd{strip}可以删除目标文件里的unnecessary信息。
+试验\blscmd{strip}把\blscmd{fget}从原始的14MB变为652KB。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Program tools
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Program Tools and Compile System}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% valgrind
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Valgrind}
+Valgrind之名来自北欧神话中奥丁\footnote{奥丁是北欧神话主神，创造了人类，
+掌管死亡、战斗、诗歌、魔法及智慧等。是众神之父。}神殿Valhalla的圣神入口。
+
+Valgrind对全局数组，或栈上数组的访问越界无能为力。Valgrind FAQ上的解释是，
+在目前memcheck的工作方式下，没有合理的方法实现访问越界检查。
+
+\blitem{--db-attach=yes}{当Valgrind发现错误时，挂载调试器。}
+\blitem{--leak-check=yes}{当使用memcheck时，检查内存泄漏。}
+
+\subsection{Callgrind}
+Callgrind用来监察函数的调用，可以分析函数的调用频率。
+与memcheck不同的是，callgrind并不向标准输出写数据，而是在程序结束时，
+将报告写入一个文件。如果想实时的监控callgrind的输出，可以使用
+~callgrind\_annotate~和~callgrind\_control~这两个命令行工具。
+
+\blscmd{callgrind\_annotate}读取callgrind的输出，并输出更易理解的内容。
+\blscmd{callgrind\_control}可以实时观测callgrind的报告。
+
+命令：
+\begin{verbatim}
+$ valgrind --tool=callgrind ./release/fget 
+$ callgrind_control -b
+\end{verbatim}
+第二个命令callgrind\_control是在另一个终端开启的，因为valgrind占用了标准输出。
+callgrind\_control的常用参数是：-b: 输出调用堆栈(像GDB的堆栈输出，但更简洁)，
+-s：输出程序状态，如PID，线程数等。
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% objdump 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{objdump}
+object可以反汇编二进制文件，如\blscmd{objdump -d ./fget}。
+\paragraph{-d}反汇编二进制文件。
+\paragraph{-C, --demangle}可以指定demangle的风格。
+\paragraph{-l}输出携带行号和文件名信息。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% nm 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{nm}
+\blitem{-C/--demangle[=style]}{Decode (demangle) low-level names into user-level names.}
+\blitem{-l/--line-numbers}{打印符号对应的文件名和行号。}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Network tools, #network
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Network Tools and Configure}
+本章的网络工具包括netstat, route, ifconfig, traceroute, tcpdump,
+iptables, ethtool, wget, curl, 
+vnstat(实时网络流量统计), nmap(端口扫描侦测)等。
+
+为使新系统连上网络，需配置：
+\begin{enumerate}
+\item 配置名字服务器。修改/etc/resolv.conf文件，添加DNS服务器地址。
+\item 配置IP。用命令ifconfig eth0配置IP地址和子网掩码。
+\item 配置路由。用命令route修改路由表。
+\end{enumerate}
+
+配置静态IP和路由，在Redhat/CentOS/Fedora上需要修改\blscmd{/etc/sysconfig/network-scripts/}路径下的
+\blscmd{ifcfg-eth0}(配置IP)和\blscmd{route-eth0}(配置路由)文件。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #configure files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Configure Files}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #/etc/hosts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\blscmd{/etc/hosts}配置主机名和IP地址的映射关系。添加如下一行：
+\bllcmd{192.168.16.71 ls.funshion.com}
+则调用如\blscmd{ping ls.funshion.com}命令时就会避开DNS查询，而直接连接指定的IP。
+在Windows下，该配置文件名为：\blscmd{C:/WINDOWS/system32/drivers/etc/hosts}。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #ethtool
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{ethtool}
+用\blscmd{ethtool}可以查看网络接口的硬件信息，并作修改。
+例如使用ethtool修改网卡速度，如：
+\bllcmd{ethtool eth0 -s speed 100  // 100Mbps}
+网络速度受网卡硬件限制，同时也受网络接入速度限制，如接入的路由限制为100Mbps，
+而设置1000Mbps则会出错。
+
+网卡可能出于半双工状态，设置网卡的工作模式为自动协商：
+\bllcmd{ethtool -s eth0 autoneg on}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #nmap
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{nmap}
+\blscmd{nmap}是为Network Mapper之意，用作端口扫描。
+手册上的一个例子是\blscmd{nmap -A -T4 www.google.com playground}，可以看到
+目标开放的端口，服务名词，使用的服务程序等。尽管都是nmap通过猜测所得，
+但依然很有参考价值，比如扫描西科校友网，发现ftp(21/tcp)使用Serv-U ftpd 6.1,
+http(80/tcp)使用IIS 6.0，且没有robots.txt。扫描西科(太多开放端口了)，
+http使用Apache 2.2.8，关闭了https(443/tcp)等。
+
+\blscmd{-O}可以让nmap猜测对端的操作系统。
+
+nmap猜测的对端系统启动日期uptime不太准。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #vnstat
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{vnstat}
+据说Gnome中有一个网络速度查看软件\blscmd{netspeed}，可以查看网络传输速度。
+
+\blscmd{vnstat}可以实施监控网络速度，简单的用法如：\blscmd{vnstat -l -i eth0}
+其中参数-l表示live，实时地更新速度。用Ctrl-C终止vnstat后，有一个数据统计输出。
+
+vnstat源码包没有configure，只需直接make即可。make后的可执行文件在src/目录中。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #traceroute
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{traceroute}
+\blscmd{traceroute}用于检测到达目的主机的中间路由。
+通过traceroute可以查看到某个路由的时耗，调整系统性能。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #netstat 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{netstat}
+
+\begin{table}
+\centering
+\caption{netstat command list}
+\begin{tabularx}{\textwidth}{lX}
+-r          & 显示路由表。和\blscmd{route}命令作用相同。\\
+-s          & 显示统计数据。\\
+-n          & 不作名字解析。\\
+-i          & 显示所有的网络接口。\\
+-p          & 打印进程信息。\\
+-c          & continue打印。\\
+-o          & 显示timer。\\
+-I          & 指定网络接口。可指定的接口包括\blscmd{eth0}, \blscmd{eth1}, \blscmd{lo}
+            等，可以先用\blscmd{netstat -i}查看所有接口。
+            在-I和接口间没有空格，参数需写作\blscmd{-Ieth0}。\\
+指定协议    & 可指定的协议包括\blscmd{-t/--tcp}, \blscmd{-u/--udp},
+                \blscmd{-S/--sctp}, \blscmd{-w/--raw}, \blscmd{-x/--unix}等。\\
+\end{tabularx}
+\end{table}
+
+通过\blscmd{netstat -s}查看统计信息，可帮助改进程序性能。如观察TCP统计，可以获得
+接收和发送的reset报文个数，可查看
+
+通过\blscmd{netstat -i}或\blscmd{netstat -Ieth0}可查看网络接口的流量信息。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #wget and #curl 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{wget and curl}
+wget常用参数
+\blitem{--limit-rate=amount}{下载限速。可以使用单位k, m作为后缀。
+因为wget用sleep实现限速用，因此下载小文件时限速可能不能很好工作。}
+\blitem{--user-agent}{让wget冒充其他客户程序。}
+
+curl常用参数。\blscmd{--local-port PORT}指定本地端口。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% tcpdump
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{tcpdump}
+\noindent\href{http://www.tcpdump.org/}{Tcpdump Homepage} 这里还提供了一个名为libpcap的库，
+随tcpdump一起发布，用于顶层抓包程序的编写。 \\
+\noindent\href{http://www.tcpdump.org/tcpdump\_man.html}{Online man page} \\
+
+\subsection{Command Paramters}
+\paragraph{-D}列出所有tcpdump可以监听的物理接口。可以用\blscmd{-i}选择这个输出的接口，可以是数字或字符串。
+如：\blscmd{tcpdump -i 1}或\blscmd{tcpdump -i eth0}。
+如果系统没有\blscmd{ifconfig -a}命令，则\blscmd{tcpdump -D}就可派上用场。
+
+\paragraph{-F}从\blscmd{-F}指定的文件读入filter expression，忽略命令行输入的表达式。
+
+\paragraph{-i}指定tcpdump抓包的目标接口。如server和client运行在同一台计算机上，
+用tcpdump抓包的命令是\blscmd{tcpdump -i lo}，这里指定物理端口为lo本地环回端口。
+
+\paragraph{-l}将输出行缓冲。一个应用如\blscmd{tcpdump -l \textbar tee dat}，
+或\blscmd{tcpdump -l \textgreater dat \& tail -f dat}，输出到stdout和dat文件。
+
+\paragraph{-n/-nn}\blscmd{-n}对IP地址不作DNS查询，\blscmd{-nn}对端口号不作名字转换。
+
+\subsection{Expression}
+
+\paragraph{host}指定监听的IP地址。\blscmd{src host}和\blscmd{dst host}分别制定源IP和目标IP地址。
+\paragraph{tcp}指定监听TCP报文。
+\paragraph{port}指定监听端口号，如\blscmd{tcpdump tcp port 6601}。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #iptables, #firewall
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{iptables}
+iptables默认的表名叫filter，如果不用\blscmd{-t talbe-name}指定表，则规则都实施在filter表上。
+除了filter表，iptables的内建表还有\blscmd{nat}和\blscmd{mangle}表。
+
+Linux防火墙通常是由rc启动脚本中的一系列iptables命令来实现的。
+iptables的常见形式为：\\
+\blscmd{iptables -F chain-name}，\\
+\blscmd{iptables -P chain-name target}，\\
+\blscmd{iptables -A chain-name -i interface -j target}
+
+\begin{tabular}{ll}
+-A, --append        & 附加策略。\\
+-I, --insert        & 插入策略。与-A不同是可指定策略位置。\\
+-N, --new-chain     & 新建一条chain。\\
+
+-f, --fragment      & 对于第二个或之后的framgmented报文起作用。\\
+
+-m, --match [!]     & 指定匹配细则。\\
+
+-F, --flush         & 把之前的所有规则从链中清除。\\
+-X, --delete-chain  & 删除非内置的规则链。\\
+-Z, --zero          & 清空所有计数(packages and bytes)。\\
+-v, --verbose       & 详细输出。包括计数信息。\\
+
+-j, --jump          & 跳转到指定处理规则。\\
+
+-P                  & 给链设置一条默认的策略。\\
+-p                  & 指定协议名。\\
+-s                  & 源IP地址。\\
+-d                  & 目标IP地址。\\
+--sport             & 源端口。\\
+--dport             & 目标端口。\\
+-t                  & 指定表名。默认为filter表。\\
+!                   & 否定一条子句。\\
+\end{tabular}
+
+target可以是：\blscmd{ACCEPT}, \blscmd{DROP}, \blscmd{REJECT}, \blscmd{LOG}, \blscmd{MIRROR},
+\blscmd{QUEUE}, \blscmd{REDIRECT}, \blscmd{RETURN}, \blscmd{ULOG}。DROP是默默地丢弃，
+REJECT则会返回一个ICMP错误消息，LOG提供日志，ULOG提供更加详细的日志。
+
+\blscmd{-I, --insert chain [rulenum] rule-specification}和\blscmd{-A}类似，都是加入一条rule。
+不同在-A是附加在chain末尾，而Insert(如果不指定rulenum, 即默认情况)是加入在rule之首。
+
+\blscmd{-m, --match}可以跟很多参数。常见的如：
+\blscmd{-m state --state STATE}, STATE可以为NEW, ESTABLISHED, RELATED等。
+\blscmd{-m limit --limit RATE}, RATE单位可以是/second, /minute, /hour, /day。
+\blscmd{-m limit --limit-burst N}, 一次最大匹配报文个数。    % todo 
+\blscmd{-m conntrack --cstate STATE}, 类似--state, 但更详细。
+
+\blscmd{[!] --syn}是只匹配设置SYN bit的TCP报文，ACK, RST, FIN位必须为0。
+
+\blscmd{\$ iptables -L -n}列出所有的规则。
+
+\blscmd{\$ iptables -I INPUT -p tcp --dport 6699 -j ACCEPT}
+
+\blscmd{\$ iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP}丢弃所有非SYN的新连接。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #monitor
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Monitor Tools}
+对于CPU，内存，磁盘I/O，网络I/O的信息，有多种名为\blscmd{*stat}的工具。某些是系统自带的，
+某些则是需要自行安装的。以下略为区别：
+
+\begin{tabular}{|l|l|l|}
+netstat   & 自带    & 查看网络信息          \\\hline
+vmstat    & 自带    & 查看虚拟内存信息      \\\hline
+vnstat    & 安装    & 查看网络实时流量      \\\hline
+iostat    & 安装    & 来自sysstat，查看磁盘实时信息     \\\hline
+mpstat    & 安装    & 来自sysstat，查看CPU相关信息      \\\hline
+pidstat   & 安装    & 来自sysstat，查看进程相关信息     \\\hline
+sar       & 安装    & 来自sysstat，查看系统统计信息     \\\hline
+\end{tabular}
+
+
+\section{System Information}
+\blscmd{lspci -vv}可以查看系统硬件的详细信息，不过一般不容易看懂，
+因此需要其他工具帮助分析判断系统的硬件组成和其他系统信息。
+
+\blscmd{locale}可以查看本地化信息。可以通过\blscmd{export LANG=zh\_CN.UTF-8}修改本地化信息。
+设置本地化为英语可用\blscmd{en\_US}。
+
+\blscmd{lsb\_release}可以查看发行版本(distribution)的信息，其中LSB是Linux Standard Base之意。
+也可以通过\blscmd{cat /etc/issue}查看较为简单的发行版信息。
+\blscmd{uname}可以查看一般性的系统信息。\blscmd{cat /proc/version}和uname命令输出大致相同。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #disk
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Disk}
+\href{http://www.acnc.com/04_02_01.html}{这里}介绍了Unix环境中的disk io benchmark工具。\\
+\href{http://www.iozone.org/}{Iozone's Homepage}。对磁盘进行压力测试，并生成输出可视化。
+
+在Linux系统，\blscmd{hdparm}命令可以查看ATA/IDE硬盘的属性。
+SCSI和SATA硬盘的标识符都是sdX，可以用以下命令查看硬盘的类型：
+
+\bllcmd{\$ grep -i ``[sh]d[a-z]'' /var/log/dmesg \textbar grep -i scsi}
+就是查看dmesg的方式。
+
+\blscmd{/proc/diskstats}提供了磁盘信息。可以在
+\blscmd{/sys/block}中查看块设备的更加全面的信息。
+
+\subsection{Sysstat}
+\blscmd{iostat}是\blscmd{sysstat}中的一个组件，用来查看磁盘实时性能。
+
+命令示例：\blscmd{iostate -d sda sdb -m 10}，每10秒刷新一次屏幕，查看sda, sdb的读写信息，并以MB为单位。
+
+\subsection{Iozone}
+命令实例：\blscmd{iozone -RazMb diskio.xls}。
+
+\begin{table}
+\centering
+\begin{tabularx}{\textwidth}{lX}
+-R      & 生成Excel文件。\\
+-b      & 指定Excel文件名。\\
+-a      & full automatic mode。文件大小值域16k-512M，读写块值域4k-16k。\\
+-M      & 使用uname()获取内核信息。\\
+-s      & 指定文件大小。\\
+-r      & 指定块大小。\\
+-g      & 最大测试文件大小。\\
+\end{tabularx}
+\end{table}
+
+Iozone的输出以Kbytes/s为单位。但测试的输出结果很奇怪，其值远大于用其他性能观察工具所视之值。待研究。
+
+Iozone输出几种类型的测试信息。值得注意的是：\blscmd{Stride Read Report}，手册介绍举例说，如每读4K数据，
+就偏移200K，再读取4K数据，如此反复迭代。\blscmd{Fwrite}, \blscmd{Fread}表示用fwrite(), fread()系统调用。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #filesystem, #fs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{FileSystem}
+\blscmd{df -h}显示文件系统使用情况。
+输出项中的/dev/shm表示virtual memory file system。
+
+\blscmd{du}显示文件目录的占用空间大小。 
+\blscmd{du -hs}显示当前目录(包括子目录)的大小。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #memory
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Memory}
+用\blscmd{free}、\blscmd{cat /proc/meminfo}查看内存。
+
+free命令行参数：\\
+\begin{tabular}{ll}
+-b -k -m    & 显示内存大小的单位。\\
+-s delay    & 显示延迟。\\
+\end{tabular}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #cpu
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{CPU}
+\blscmd{uptime}只有一行输出，用于查看系统的启动时间，当前用户数，以及系统负载。
+系统负载有三个输出，包括最近1分钟，5分钟，15分钟内的系统负载。
+如果系统负载的值超过3，则可能处于较大压力。
+uptime的输出和\blscmd{w}输出的第一行相同。
+
+\blscmd{uptime}和\blscmd{w}的man手册页说从\blscmd{/var/run/utmp}获取登录用户信息。
+如果\blscmd{cat /var/run/utmp}则输出乱码以致干扰终端显示，慎用。
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% procinfo 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{procinfo}
+\blscmd{procinfo}主要输出cpu和内存信息。
+在一些Linux发行版上不是自带的。procinfo主要解析\blscmd{/proc}文件系统，
+与\blscmd{free}，\blscmd{uptime}等输出类似。它的命令行参数如下：
+\blscmd{-f} 全屏显示。
+\blscmd{-nN} 间隔N秒输出一次。但不是如top等命令的刷屏，而是直接往下输出。
+\blscmd{-m} 输出模块和设备，而非cpu和内存信息。
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #rpm
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% other tools
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Other Tools}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% perforce/p4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Perforce/P4}
+一个用户可以有多个Client。Linux用命令\blscmd{p4 client cilentname}即可创建一个新的Client。
+默认打开一个名为``Client Specification''的文件，修改以下字段：
+
+\begin{tabular}{|l|l|}\hline
+Client      & client名  \\\hline
+Owner       & 一个owner可以有多个client \\\hline
+Root        & 本地路径，如/home/berlin，按默认不用理会  \\\hline
+View        & perforce和本地的映射关系  \\\hline
+\end{tabular}
+
+View的一个实例如\blscmd{//Project/... //berlin/workspace/...}，\ldots表示所有文件，是一个通配符。
+以上表示perforce的//Project/映射为/home/berlin/workspace，前缀/home/berlin由Root指定。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #berkeleydb
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{BerkeleyDB}
+进入build\_unix，执行\blscmd{../dist/configure}，不能在dist目录执行configure。
+默认make install将库安置于/usr/local/BerkeleyDB.4.7/lib。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #cron
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{cron}
+\blscmd{cron}自动执行周期性任务。在RH上cron无故被叫作了crond。
+cron每分钟醒来一次，会执行crontab文件中的命令，如果crontab文件被修改，
+则重新加载。因为掉电或者修改系统时钟导致的任务没有执行，cron不会补过执行。
+
+crontab文件存在于以下3个地方：
+\begin{enumerate}
+\item \blscmd{/var/spool/cron/}这里存放一般用户的crontab。当用户执行\blscmd{crontab -e}
+时，即可编辑其所属之crontab文件，并最后存储于/var/spool/cron/username中。但一般用户不能直接
+访问/var中的文件。
+\item \blscmd{/etc/crontab}，这个文件由系统管理员维护，手工编辑。
+\item \blscmd{/etc/cron.d/}这里通常存放软件包需要的cron操作。
+\end{enumerate}
+
+除了以上路径，Linux中另有一些如\blscmd{/etc/cron.weekly}, \blscmd{/etc/cron.daily}，
+\blscmd{/etc/cron.monthly}的目录，里面存放shell脚本，用以cron调度执行。
+
+\blscmd{/etc/cron.deny}是拒绝指定用户执行cron。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #linux
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Linux Distrubtion}
+CentOS \href{http://www.centos.org/docs/5/}{CentOS 5.x文档库}。
+
+\begin{tabular}{ll}
+Fedora  & 是一种浅顶软呢帽，是RedHat上的那顶帽子。\\
+Ubuntu  & 是一个南非民族的观念，意为“人道待人”。\\
+Debian  & 是Ian Murdock在1998年命名的，来自他女友Debra和他名字的混合。\\
+\end{tabular}
+
+以下是在使用各种发行版中的问题记录，基本是一些小问题，但也花费了不少时间。
+
+\bldate{2009/03/31} 在安装Debian系统时，如果只选择“桌面系统”和“基本系统”，你可能什么事也干不了，
+因为可以没有gcc, gdb, make等一系列开发工具。所以还得用\blscmd{apt-get}把这些软件都安装。
+而Debian安装时的可选粒度也不如fedora, CentOS的好，因此比较麻烦一些。
+
+\bldate{2009/03/30} 安装Debian 5.00后，用SSH登录总是失败。检查Debian网络配置，一切正常。
+可以连接上互联网。最后发现默认居然没有安装sshd服务。因此不得已，\blscmd{apt-get install ssh}安装sshd，
+再\blscmd{/etc/init.d/ssh start}启动sshd。如此这般，就可以ssh登录了。
