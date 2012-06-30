@@ -1,0 +1,45 @@
+digraph G{
+    rankdir=LR;
+
+    node [shape = record];
+
+    subgraph cluster_piece{
+        piece[label=""]; 
+        label="piece\nvector<subpiece*>"
+        color=blue
+    }
+
+    subgraph cluster_subpiece{
+        subpiece[label="<f0>subpiece-1|<f1>subpiece-2|<f2>...|<f3>subpiece-16"]; 
+        color=blue
+    }
+
+    subgraph cluster_bitarry{
+        bitarry[label="<f0>|<f1>|<f2>|<f3>|"]; 
+        label="bitarry\nvector<bit>"
+        color=blue    
+    }
+
+    subgraph cluster_bit{
+        bit[label="{<f00>|sel|not-sel|<f01>}"]; 
+        label="bit\nvector<subbit>"
+        color=blue    
+    }
+
+    subgraph cluster_subbit{
+        subbit[label="{<f0>subbit-1|0|1|2}|<f1>subbit-2|<f2>...|<f3>subbit-16"]; 
+        //label="subbit"
+        color=blue    
+    }
+
+    bitarry:f0 -> bit:f00[label="1-N"];
+
+    bit:f01 -> piece[label="1-1"];
+    bit:f01 -> subbit:f0[label="1-16"];
+
+    subbit:f0 -> peer[label="point to"];
+
+    piece -> subpiece:f0[label="1:16"];
+
+    subpiece:f0 -> buffer[style=dotted,label="1:1"];
+}
