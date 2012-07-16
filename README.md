@@ -18,4 +18,8 @@ codes
 
 class-subclass-subsubclass.type : 文件名全小写，用`-`连接
 
+提交
+----
+git push origin master
+
 [1]:http://www.berlinix.com
