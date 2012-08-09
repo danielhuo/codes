@@ -7,7 +7,8 @@
  */
 
 /* length of isbn: 13, here is 12 */
-$isbn = "978702007216";
+#$isbn = "978711526431";
+$isbn = "978711526431";
 $varr = "131313131313";
 
 $len = strlen($isbn);
