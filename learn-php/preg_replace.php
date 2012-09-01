@@ -21,5 +21,13 @@ echo trim($parts[count($parts) - 1], ")")."\n";     /* output: 100 */
 $s = "link to http://www.berlinix.com/.";
 echo preg_replace("/http:\/\/(.*)\//", "<a href=\"\${0}\">\${0}</a>", $s)."\n";
 
+/* bailing, 2012/09/01 */
+
+echo "\n==========\n";
+
+$s = 'input type="hidden" name="_xsrf" value="9c6a6aa2fceb42059aa631c5378e0a64"';
+if(preg_match('/value="([^"]*)"/', $s, $matches) === 1) {
+    echo "$matches[1]\n";                           /* output: 9c6a6aa2fceb42059aa631c5378e0a64 */
+}
 
 ?>
