@@ -30,4 +30,9 @@ if(preg_match('/value="([^"]*)"/', $s, $matches) === 1) {
     echo "$matches[1]\n";                           /* output: 9c6a6aa2fceb42059aa631c5378e0a64 */
 }
 
+/* bailing, 2012/09/12 */
+$s = "ems: First 500g: 240 ¥, Additional 500g: 75 ¥. Standard EMS fee: 1140 ¥ / 182.4 $. 4px bj: 604.2, 4px wd: 490.2, yw bj: 592.8, yw wd: 478.8 ¥, " ;
+
+echo preg_replace("/ems.*?4px/", "4px", $s)."\n";
+
 ?>
