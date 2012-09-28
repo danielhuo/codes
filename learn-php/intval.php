@@ -47,4 +47,12 @@ if(0 == "aa") {
     echo "woo!\n";      // equal!
 }
 
+echo "--\n";
+$num = "009d2ff4bfffe4f8";
+echo base_convert($num, 16, 2)."\n";
+echo strlen("10011101001011111111010010111111111111111110010011111000")."\n";   // 56
+// 0000 0000 ....                                                               // 64
+echo base_convert("010011", 2, 10)."\n";
+echo "\n";
+
 ?>
