@@ -37,6 +37,9 @@
 (defun select (selector-fn)
  (remove-if-not selector-fn *db*))
 
+(defun delete-rows (selector-fn)
+ (setf *db* (remove-if selector-fn *db*)))
+
 ;(defun where (&key title artist rating (ripped nil ripped-p))
 ; #'(lambda (cd)
 ;     (and
@@ -46,11 +49,15 @@
 ;      (if ripped-p (equal (getf cd :ripped) ripped) t))))
 
 (defun make-comparison-expr (field value)
- `(equal (get cd ,field) ,value))
+ `(equal (getf cd ,field) ,value))
 
 (defun make-comparison-list (fields)
  (loop while fields
-  collecting (make-comparison-expr (pop feilds) (pop feilds))))
+  collecting (make-comparison-expr (pop fields) (pop fields))))
 
 (defmacro where (&rest clauses)
  `#'(lambda (cd) (and ,@(make-comparison-list clauses))))
+
+(print (macroexpand-1 `(where :artist "Rose" :arting 7)))
+
+(print (select (where :title "Rose")))
