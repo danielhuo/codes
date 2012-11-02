@@ -1,4 +1,7 @@
 #include <iostream>
+#include <queue>
+#include <stack>
+#include <unistd.h>
 
 class node
 {
@@ -27,10 +30,16 @@ class tree
 
         void per_order() const { _per_order(_root); }
         void post_order() const { _post_order(_root); }
+        void in_order() const { _in_order(_root); }
+
+        void npre_order() const;
+        void npost_order() const;
+        void nin_order() const;
 
     private:
         void _per_order(node* n) const; 
         void _post_order(node* n) const;
+        void _in_order(node* n) const;
         node* _min(node* n) const;
         node* _max(node* n) const;
         node* _succssor(node* n) const;
@@ -161,6 +170,74 @@ void tree::_post_order(node* n) const
     }
 }
 
+void tree::_in_order(node* n) const 
+{
+    if(n) {
+        _in_order(n->_left);
+        std::cout << n->_data << " ";
+        _in_order(n->_right);
+    }
+}
+
+void tree::npre_order() const
+{
+    std::stack<node*> s;
+    s.push(_root);
+
+    node* p;
+    while(!s.empty()) {
+        p = s.top();
+        s.pop();
+        std::cout << p->_data << " ";
+
+        if(p->_right) s.push(p->_right);
+        if(p->_left) s.push(p->_left);
+    }
+}
+
+void tree::npost_order() const
+{
+    std::stack<node*> s;
+    s.push(_root);
+
+    node* pre = NULL;
+    node* cur;
+    while(!s.empty()) {
+        cur = s.top();
+
+        // leaf or children have accessed, print
+        if((cur->_left == NULL and cur->_right == NULL) or
+            (pre and (pre == cur->_left or pre == cur->_right))) {
+            std::cout << cur->_data << " ";
+            s.pop();
+            pre = cur;
+        } else {
+            if(cur->_right) s.push(cur->_right);
+            if(cur->_left) s.push(cur->_left);
+        }
+    }
+}
+
+void tree::nin_order() const
+{
+    std::stack<node*> s;
+
+    node* p = _root;
+    while(p or !s.empty()) {
+        while(p) {
+            s.push(p);
+            p = p->_left;
+        }
+
+        p = s.top();
+        std::cout << p->_data << " ";
+        s.pop();
+
+        p = p->_right;
+    }
+}
+
+
 int main()
 {
     tree t;
@@ -182,10 +259,28 @@ int main()
     std::cout << t.min()->_data << "\n";
     std::cout << t.search(6)->_data << "\n";
 
+    std::cout << "      pre order: ";
     t.per_order();
     std::cout << "\n";
 
+    std::cout << "     npre order: ";
+    t.npre_order();
+    std::cout << "\n";
+
+    std::cout << "     post order: ";
     t.post_order();
+    std::cout << "\n";
+
+    std::cout << "    npost order: ";
+    t.npost_order();
+    std::cout << "\n";
+
+    std::cout << "       in order: ";
+    t.in_order();
+    std::cout << "\n";
+
+    std::cout << "      nin order: ";
+    t.nin_order();
     std::cout << "\n";
 
     node* p = t.search(5);
