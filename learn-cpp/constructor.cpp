@@ -5,14 +5,22 @@
  */
 
 #include <iostream>
+#include <string>
 
-struct constr {
-    constr()    { std::cout << "initialize\n"; }
-    ~constr()   { std::cout << "cleanup\n"; }
-} c;
+class A {
+    public:
+        A() { printf("construct A\n"); }
+};
+
+class B {
+    A _a;
+};
+
+class C : public B {};
 
 int main()
 {
-    std::cout << "hello berlinix!\n";
+    C c;
+
     return 0;
 }
